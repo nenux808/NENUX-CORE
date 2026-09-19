@@ -76,6 +76,8 @@ class TestFasterWhisperSTT(unittest.TestCase):
             self.assertEqual(transcript, "Hello from NENUX")
             self.assertTrue(fake_model.vad_filter)
             self.assertIsNone(fake_model.initial_prompt)
+            self.assertIn("Clara", fake_model.kwargs["hotwords"])
+            self.assertIn("NENUX", fake_model.kwargs["hotwords"])
             self.assertFalse(fake_model.kwargs["condition_on_previous_text"])
 
     def test_keeps_low_confidence_metadata_out_of_custom_filtering(self):
