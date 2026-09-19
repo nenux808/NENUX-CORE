@@ -1,6 +1,10 @@
-"""Conservative request routing for NENUX Core."""
+"""Request routing for NENUX Core."""
 
 import re
+
+from ollama import chat
+
+from config import CHAT_MODEL
 
 
 ACTION_PATTERNS = (
@@ -16,15 +20,55 @@ MEMORY_PATTERNS = (
     r"\b(previous|previously|earlier|last time|before)\b",
 )
 
+RETRIEVAL_HINT_PATTERNS = (
+    r"\b(youtube|channel|website|site|company|business|brand|product|app|service|restaurant|hotel|place)\b",
+    r"\b(who is|what is|what do you know about|tell me about|have you heard of)\b",
+)
+
+ROUTE_LABELS = {"conversation", "memory", "agent_task", "retrieval"}
+
+
+def _matches(patterns: tuple[str, ...], text: str) -> bool:
+    return any(re.search(pattern, text) for pattern in patterns)
+
+
+def _model_route(user_input: str) -> str:
+    """Classify ambiguous knowledge requests without executing any tool."""
+    response = chat(
+        model=CHAT_MODEL,
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "Classify one user request for NENUX Core. Return exactly one label: "
+                    "conversation, memory, agent_task, or retrieval. "
+                    "conversation = casual chat or stable common knowledge that the local model can answer. "
+                    "memory = asks about the user's prior conversations/work. "
+                    "agent_task = asks to execute, modify, read local resources, test, or perform an action. "
+                    "retrieval = asks about a specific named person, organization, channel, website, product, "
+                    "place, event, or fact where external lookup may be needed, or where freshness/verification "
+                    "would materially improve accuracy. When uncertain between conversation and retrieval for "
+                    "a specific real-world entity, choose retrieval. Do not answer the request."
+                ),
+            },
+            {"role": "user", "content": user_input},
+        ],
+    )
+    label = response.message.content.strip().lower().split()[0].strip(".,:;")
+    return label if label in ROUTE_LABELS else "conversation"
+
 
 def route_request(user_input: str) -> str:
-    """Return conversation, memory, or agent_task."""
+    """Return conversation, memory, agent_task, or retrieval."""
     text = user_input.strip().lower()
 
-    if any(re.search(pattern, text) for pattern in ACTION_PATTERNS):
+    if _matches(ACTION_PATTERNS, text):
         return "agent_task"
 
-    if any(re.search(pattern, text) for pattern in MEMORY_PATTERNS):
+    if _matches(MEMORY_PATTERNS, text):
         return "memory"
+
+    if _matches(RETRIEVAL_HINT_PATTERNS, text):
+        return _model_route(user_input)
 
     return "conversation"
