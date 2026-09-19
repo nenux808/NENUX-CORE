@@ -5,6 +5,7 @@ from tools.filesystem import (
 )
 
 from tools.python_tool import run_python
+from tools.web_search import web_search
 
 from core.permissions import request_permission
 from memory.database import log_action
@@ -15,6 +16,7 @@ TOOL_REGISTRY = {
     "read_file": read_file,
     "write_file": write_file,
     "run_python": run_python,
+    "web_search": web_search,
 }
 
 
