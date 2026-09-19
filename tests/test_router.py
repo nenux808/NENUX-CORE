@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 
 from core.router import route_request
 
@@ -24,6 +25,22 @@ class TestRequestRouter(unittest.TestCase):
             route_request("search the web for NENUX Core"),
             "agent_task",
         )
+
+    @patch("core.router._model_route", return_value="retrieval")
+    def test_obscure_youtube_channel_can_route_to_retrieval(self, mock_route):
+        self.assertEqual(
+            route_request("what do you know about SL vlog, YouTube channel?"),
+            "retrieval",
+        )
+        mock_route.assert_called_once()
+
+    @patch("core.router._model_route", return_value="conversation")
+    def test_common_entity_question_can_remain_conversation(self, mock_route):
+        self.assertEqual(
+            route_request("what is Python?"),
+            "conversation",
+        )
+        mock_route.assert_called_once()
 
 
 if __name__ == "__main__":
