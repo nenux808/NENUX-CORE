@@ -20,6 +20,10 @@ MEMORY_PATTERNS = (
     r"\b(previous|previously|earlier|last time|before)\b",
 )
 
+MEDIA_RETRIEVAL_PATTERNS = (
+    r"\b(lyrics?|release date|released|album|who sings|who sang|who wrote|song meaning|track meaning)\b",
+)
+
 RETRIEVAL_HINT_PATTERNS = (
     r"\b(youtube|channel|website|site|company|business|brand|product|app|service|restaurant|hotel|place)\b",
     r"\b(who is|what is|what do you know about|tell me about|have you heard of)\b",
@@ -64,6 +68,9 @@ def route_request(user_input: str) -> str:
 
     if _matches(ACTION_PATTERNS, text):
         return "agent_task"
+
+    if _matches(MEDIA_RETRIEVAL_PATTERNS, text):
+        return "retrieval"
 
     if _matches(MEMORY_PATTERNS, text):
         return "memory"
