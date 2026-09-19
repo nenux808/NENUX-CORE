@@ -30,6 +30,7 @@ from tools.registry import execute_tool
 from core.planner import create_plan
 from core.evaluator import evaluate_steps
 from core.policy import memory_only_mode, should_store_task_memory
+from core.router import route_request
 from core.resume import (
     find_resumable_task,
     build_resume_prompt,
@@ -791,17 +792,58 @@ def evaluate_task(
 
 
 
+
+def run_conversation(
+    user_input: str,
+    history: list,
+) -> str:
+    """Answer a non-action conversational request without tool planning."""
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                SYSTEM_PROMPT
+                + "\n\nVOICE IDENTITY:\n"
+                  "When interacting through the Clara interface, your assistant "
+                  "name is Clara and you are the voice interface for NENUX Core. "
+                  "For ordinary conversation, answer directly and do not request tools."
+            ),
+        }
+    ]
+    messages.extend(history)
+    messages.append(
+        {
+            "role": "user",
+            "content": user_input,
+        }
+    )
+    return call_model(messages)
+
 def process_user_request(
     user_input: str,
     history: list,
 ):
     """Run one new user request through the same tracked NENUX Core pipeline."""
     original_goal = user_input
+    route = route_request(user_input)
 
     save_message(
         "user",
         user_input
     )
+
+    if route == "conversation":
+        reply = run_conversation(
+            user_input,
+            history,
+        )
+
+        save_message(
+            "assistant",
+            reply
+        )
+
+        return reply, "completed", get_recent_messages()
 
     if memory_only_mode(user_input):
         task_id = create_task(
