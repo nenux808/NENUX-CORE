@@ -18,8 +18,6 @@ from config import (
     MICROPHONE_RECORD_SECONDS,
     MICROPHONE_SAMPLE_RATE,
     MICROPHONE_SILENCE_SECONDS,
-    MICROPHONE_SPEECH_START_WINDOW_SECONDS,
-    MICROPHONE_SPEECH_START_REQUIRED_CHUNKS,
     MICROPHONE_MIN_UTTERANCE_SECONDS,
     MICROPHONE_SPEECH_RMS_THRESHOLD,
     MICROPHONE_START_TIMEOUT_SECONDS,
@@ -176,16 +174,10 @@ def record_until_silence(
     start_chunks = max(1, int(start_timeout / chunk_seconds))
     silence_chunks_needed = max(1, int(silence_seconds / chunk_seconds))
     pre_roll_chunks = max(1, int(pre_roll_seconds / chunk_seconds))
-    speech_start_window_chunks = max(
-        1,
-        int(MICROPHONE_SPEECH_START_WINDOW_SECONDS / chunk_seconds),
-    )
-
     chunks: list[np.ndarray] = []
     pre_roll: deque[np.ndarray] = deque(maxlen=pre_roll_chunks)
     speech_started = False
     silent_chunks = 0
-    speech_votes: deque[bool] = deque(maxlen=speech_start_window_chunks)
 
     for index in range(max_chunks):
         chunk = sd.rec(
@@ -197,18 +189,15 @@ def record_until_silence(
         sd.wait()
         chunk = np.asarray(chunk, dtype=np.int16)
 
-        is_speech = chunk_contains_speech(
-            chunk,
-            speech_threshold=speech_threshold,
-            sample_rate=sample_rate,
-        )
+        level = rms_level(chunk)
 
         if not speech_started:
             pre_roll.append(chunk)
 
-            speech_votes.append(is_speech)
-
-            if sum(speech_votes) >= MICROPHONE_SPEECH_START_REQUIRED_CHUNKS:
+            # Start capture permissively from the microphone's actual energy.
+            # WebRTC VAD is intentionally not used here because it can reject
+            # valid speech before Whisper ever receives it.
+            if level >= speech_threshold:
                 speech_started = True
                 chunks.extend(list(pre_roll))
                 pre_roll.clear()
@@ -218,6 +207,12 @@ def record_until_silence(
             continue
 
         chunks.append(chunk)
+
+        is_speech = chunk_contains_speech(
+            chunk,
+            speech_threshold=speech_threshold,
+            sample_rate=sample_rate,
+        )
 
         if is_speech:
             silent_chunks = 0
@@ -239,7 +234,7 @@ def record_until_silence(
 
     # Final utterance-level validation: don't send clips dominated by noise
     # into Whisper even if a transient accidentally started capture.
-    if webrtc_voiced_ratio(audio, sample_rate=sample_rate) < 0.12:
+    if webrtc_voiced_ratio(audio, sample_rate=sample_rate) < 0.08:
         empty = np.zeros((0, channels), dtype=np.int16)
         return _write_wav(path, empty, sample_rate, channels), False
 
