@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+from config import CORE_NAME, CORE_VERSION, NODE_NAME
+
 BASE_DIR = Path(__file__).resolve().parent
 
 CORE_IDENTITY_FILE = BASE_DIR / "core_identity.json"
@@ -21,7 +23,11 @@ def save_json(path: Path, data: dict) -> None:
 
 
 def get_core_identity() -> dict:
-    return load_json(CORE_IDENTITY_FILE)
+    identity = load_json(CORE_IDENTITY_FILE)
+    identity["name"] = CORE_NAME
+    identity["version"] = CORE_VERSION
+    identity["node"] = NODE_NAME
+    return identity
 
 
 def get_user_profile() -> dict:
