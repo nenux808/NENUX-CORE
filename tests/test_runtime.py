@@ -115,6 +115,8 @@ class TestDatabaseMemory(unittest.TestCase):
                     {"value": 42}
                 )
 
+                database.get_connection().close()
+
     def test_database_initializes_expected_tables(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             test_db = Path(temp_dir) / "test_schema.db"
@@ -126,7 +128,8 @@ class TestDatabaseMemory(unittest.TestCase):
             ):
                 database.init_database()
 
-                with sqlite3.connect(test_db) as conn:
+                conn = sqlite3.connect(test_db)
+                try:
                     rows = conn.execute(
                         """
                         SELECT name
@@ -134,6 +137,8 @@ class TestDatabaseMemory(unittest.TestCase):
                         WHERE type = 'table'
                         """
                     ).fetchall()
+                finally:
+                    conn.close()
 
             tables = {
                 row[0]
