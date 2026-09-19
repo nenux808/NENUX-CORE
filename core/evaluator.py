@@ -214,7 +214,11 @@ def evaluate_steps(
         )
 
         if isinstance(steps, list):
-            return steps
+            return _enforce_tool_action_matching(
+                planned_steps,
+                tool_trace,
+                steps,
+            )
 
     except (
         json.JSONDecodeError,
@@ -223,3 +227,59 @@ def evaluate_steps(
         pass
 
     return []
+
+
+
+def _enforce_tool_action_matching(
+    planned_steps: list,
+    tool_trace: list,
+    evaluation: list,
+) -> list:
+    """Prevent model evaluation from crediting a step to the wrong tool."""
+    used_tools = {
+        entry.get("tool")
+        for entry in tool_trace
+        if isinstance(entry, dict)
+    }
+
+    evaluation_map = {
+        int(item.get("step_id")): item
+        for item in evaluation
+        if isinstance(item, dict) and str(item.get("step_id", "")).isdigit()
+    }
+
+    for step in planned_steps:
+        step_id = int(step.get("step_id"))
+        description = str(step.get("description", "")).lower()
+        required_tool = None
+
+        if "web_fetch" in description or "fetch " in description or "fetch the" in description:
+            required_tool = "web_fetch"
+        elif "web_search" in description or "search the web" in description:
+            required_tool = "web_search"
+        elif "read the file" in description or "read_file" in description:
+            required_tool = "read_file"
+        elif "run_python" in description or "execute the python" in description or "execute the script" in description:
+            required_tool = "run_python"
+
+        if required_tool and required_tool not in used_tools:
+            evaluation_map[step_id] = {
+                "step_id": step_id,
+                "status": "pending",
+                "reason": (
+                    f"The planned action requires {required_tool}, but that tool "
+                    "was not executed during this attempt."
+                ),
+            }
+
+    return [
+        evaluation_map.get(
+            int(step.get("step_id")),
+            {
+                "step_id": int(step.get("step_id")),
+                "status": "pending",
+                "reason": "No reliable execution evidence.",
+            },
+        )
+        for step in planned_steps
+    ]
