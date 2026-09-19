@@ -8,8 +8,6 @@ from config import (
     STT_DEVICE,
     STT_INITIAL_PROMPT,
     STT_MODEL,
-    STT_SEGMENT_MAX_NO_SPEECH_PROB,
-    STT_SEGMENT_MIN_AVG_LOGPROB,
 )
 
 
@@ -28,17 +26,6 @@ def _normalize_transcript(text: str) -> str:
         .replace("!", " ")
         .replace("?", " ")
         .split()
-    )
-
-
-def _segment_is_confident(segment: Any) -> bool:
-    """Reject segments Whisper itself marks as probable silence/low confidence."""
-    no_speech_prob = getattr(segment, "no_speech_prob", 0.0)
-    avg_logprob = getattr(segment, "avg_logprob", 0.0)
-
-    return (
-        no_speech_prob <= STT_SEGMENT_MAX_NO_SPEECH_PROB
-        and avg_logprob >= STT_SEGMENT_MIN_AVG_LOGPROB
     )
 
 
@@ -90,7 +77,7 @@ class FasterWhisperSTT:
         transcript = " ".join(
             segment.text.strip()
             for segment in segments
-            if segment.text.strip() and _segment_is_confident(segment)
+            if segment.text.strip()
         ).strip()
 
         if _normalize_transcript(transcript) in KNOWN_HALLUCINATIONS:
