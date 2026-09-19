@@ -31,7 +31,9 @@ from tools.registry import execute_tool
 from core.planner import create_plan
 from core.evaluator import evaluate_steps
 from core.policy import (
+    enforce_lyrics_output_policy,
     is_lyrics_context_followup,
+    is_media_content_request,
     memory_only_mode,
     should_store_task_memory,
 )
@@ -360,6 +362,7 @@ def run_agent(
     user_input: str,
     history: list,
     retrieval_required: bool = False,
+    source_fetch_required: bool = False,
 ):
     memory_context = build_memory_context()
 
@@ -441,6 +444,7 @@ Use tools again when current evidence is required.
     forced_execution_reminder = False
     forced_read_reminder = False
     forced_retrieval_reminder = False
+    forced_fetch_reminder = False
 
     for step_number in range(
         max_steps
@@ -460,6 +464,36 @@ Use tools again when current evidence is required.
                 entry["tool"]
                 for entry in tool_trace
             }
+
+            if (
+                source_fetch_required
+                and "web_search" in used_tools
+                and "web_fetch" not in used_tools
+                and not forced_fetch_reminder
+            ):
+                forced_fetch_reminder = True
+
+                messages.append(
+                    {
+                        "role": "assistant",
+                        "content": response
+                    }
+                )
+
+                messages.append(
+                    {
+                        "role": "user",
+                        "content": (
+                            "RUNTIME SOURCE VERIFICATION FAILED: "
+                            "This media/retrieval request requires verification from an actual source page. "
+                            "web_search was used, but web_fetch was not. "
+                            "Do not finalize yet. Fetch the strongest relevant public source page, "
+                            "then answer from that page evidence."
+                        )
+                    }
+                )
+
+                continue
 
             if (
                 retrieval_required
@@ -1017,7 +1051,12 @@ def process_user_request(
             user_input,
             history,
             retrieval_required=(route == "retrieval"),
+            source_fetch_required=(
+                route == "retrieval" and is_media_content_request(user_input)
+            ),
         )
+
+        reply = enforce_lyrics_output_policy(user_input, reply)
 
         task_status = evaluate_task(
             goal=original_goal,
