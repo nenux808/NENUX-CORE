@@ -11,6 +11,7 @@ from config import (
     MICROPHONE_SPEECH_RMS_THRESHOLD,
     MICROPHONE_WEBRTC_VAD_MODE,
 )
+from interface import microphone
 from interface.microphone import adaptive_speech_threshold, chunk_contains_speech, rms_level
 
 
@@ -82,6 +83,13 @@ class TestVoiceActivityHelpers(unittest.TestCase):
 
     def test_start_gate_floor_is_permissive_for_measured_voice(self):
         self.assertLessEqual(MICROPHONE_SPEECH_RMS_THRESHOLD, 0.002)
+
+    def test_recorder_uses_continuous_input_stream(self):
+        import inspect
+
+        source = inspect.getsource(microphone.record_until_silence)
+        self.assertIn("sd.InputStream", source)
+        self.assertNotIn("sd.rec(", source)
 
 
 class TestContinuousVoiceRouting(unittest.TestCase):
