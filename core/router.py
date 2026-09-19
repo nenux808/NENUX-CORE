@@ -4,8 +4,8 @@ import re
 
 
 ACTION_PATTERNS = (
-    r"\\b(latest|current|currently|today|tonight|right now|live|news|weather|forecast|price|score)\\b",
-    r"\\b(search|look up|find online|on the web|internet)\\b",
+    r"\b(latest|current|currently|today|tonight|right now|live|news|weather|forecast|price|score)\b",
+    r"\b(search|look up|find online|on the web|internet)\b",
     r"\b(run|execute|test|verify|debug|fix|repair)\b",
     r"\b(read|open|inspect|list|write|create|modify|edit|delete)\b.*\b(file|folder|script|code|program|workspace)\b",
     r"\b(file|folder|script|code|program|workspace)\b.*\b(read|open|inspect|list|write|create|modify|edit|delete)\b",
@@ -18,11 +18,7 @@ MEMORY_PATTERNS = (
 
 
 def route_request(user_input: str) -> str:
-    """Return conversation, memory, or agent_task.
-
-    The router is intentionally conservative: anything that looks actionable
-    falls back to the hardened agent pipeline.
-    """
+    """Return conversation, memory, or agent_task."""
     text = user_input.strip().lower()
 
     if any(re.search(pattern, text) for pattern in ACTION_PATTERNS):
