@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import Any
 
-from config import STT_COMPUTE_TYPE, STT_DEVICE, STT_MODEL
+from config import STT_COMPUTE_TYPE, STT_DEVICE, STT_INITIAL_PROMPT, STT_MODEL
 
 
 class FasterWhisperSTT:
@@ -15,11 +15,13 @@ class FasterWhisperSTT:
         device: str = STT_DEVICE,
         compute_type: str = STT_COMPUTE_TYPE,
         model: Any = None,
+        initial_prompt: str = STT_INITIAL_PROMPT,
     ):
         self.model_size = model_size
         self.device = device
         self.compute_type = compute_type
         self._model = model
+        self.initial_prompt = initial_prompt
 
     def _get_model(self):
         if self._model is None:
@@ -42,6 +44,7 @@ class FasterWhisperSTT:
         segments, _ = self._get_model().transcribe(
             str(path),
             vad_filter=True,
+            initial_prompt=self.initial_prompt,
         )
 
         return " ".join(
