@@ -101,6 +101,7 @@ def main():
                     session_active = False
                     print("[SESSION] Follow-up window expired; wake phrase required.")
 
+                wake_detected = extract_wake_command(transcript) is not None
                 command, session_active = resolve_voice_command(
                     transcript,
                     session_active,
@@ -115,7 +116,7 @@ def main():
                     print("[WAKE] Clara activated, but no command was provided.\n")
                     continue
 
-                if transcript.strip().lower().startswith("hey clara"):
+                if wake_detected:
                     print("[WAKE] Clara activated.")
                 else:
                     print("[SESSION] Follow-up accepted.")
@@ -140,12 +141,12 @@ def main():
                     command,
                     reply,
                 )
-                last_activity_at = time.monotonic()
 
                 print(f"\nCLARA > {reply}")
                 print(f"[STATUS] {status.upper()}")
                 print("[VOICE] Speaking response...")
                 tts.speak(reply)
+                last_activity_at = time.monotonic()
                 print()
 
     except KeyboardInterrupt:
