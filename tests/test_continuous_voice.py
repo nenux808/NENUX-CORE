@@ -1,9 +1,12 @@
+import sys
+import types
 import unittest
+from unittest.mock import patch
 
 import numpy as np
 
 from clara import resolve_voice_command
-from interface.microphone import adaptive_speech_threshold, rms_level
+from interface.microphone import adaptive_speech_threshold, chunk_contains_speech, rms_level
 
 
 class TestVoiceActivityHelpers(unittest.TestCase):
@@ -30,6 +33,40 @@ class TestVoiceActivityHelpers(unittest.TestCase):
         )
         self.assertGreater(threshold, 0.003)
         self.assertLessEqual(threshold, 0.008)
+
+    def test_two_stage_gate_rejects_noise_even_when_loud(self):
+        fake_module = types.SimpleNamespace(
+            Vad=lambda mode: types.SimpleNamespace(
+                is_speech=lambda frame, sample_rate: False
+            )
+        )
+        audio = np.full((1600, 1), 3000, dtype=np.int16)
+
+        with patch.dict(sys.modules, {"webrtcvad": fake_module}):
+            self.assertFalse(
+                chunk_contains_speech(
+                    audio,
+                    speech_threshold=0.002,
+                    sample_rate=16000,
+                )
+            )
+
+    def test_two_stage_gate_accepts_speech_like_frames(self):
+        fake_module = types.SimpleNamespace(
+            Vad=lambda mode: types.SimpleNamespace(
+                is_speech=lambda frame, sample_rate: True
+            )
+        )
+        audio = np.full((1600, 1), 3000, dtype=np.int16)
+
+        with patch.dict(sys.modules, {"webrtcvad": fake_module}):
+            self.assertTrue(
+                chunk_contains_speech(
+                    audio,
+                    speech_threshold=0.002,
+                    sample_rate=16000,
+                )
+            )
 
 
 class TestContinuousVoiceRouting(unittest.TestCase):
