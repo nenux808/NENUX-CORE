@@ -6,9 +6,7 @@ from datetime import datetime
 from ollama import embed
 
 from memory.database import get_connection
-
-
-EMBED_MODEL = "nomic-embed-text"
+from config import EMBED_MODEL
 
 
 def init_semantic_memory():
