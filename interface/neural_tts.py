@@ -15,6 +15,12 @@ from config import (
 
 def sanitize_for_speech(text: str) -> str:
     """Remove visual-only symbols that should not be spoken aloud."""
+    # URLs are useful on screen but terrible spoken output. Remove them before
+    # synthesis while leaving the visible Clara response unchanged.
+    cleaned = re.sub(r"https?://[^\\s)\\]}>]+", "", text, flags=re.IGNORECASE)
+    cleaned = re.sub(r"www\\.[^\\s)\\]}>]+", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\\[[^\\]]+\\]\\([^\\s)]+\\)", lambda m: m.group(0).split("](")[0][1:], cleaned)
+
     cleaned = "".join(
         char
         for char in text
