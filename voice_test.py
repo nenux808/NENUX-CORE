@@ -5,6 +5,7 @@ from pathlib import Path
 
 from interface.microphone import record_wav
 from interface.speech_to_text import FasterWhisperSTT
+from interface.wake_word import extract_wake_command
 
 
 def main():
@@ -24,6 +25,16 @@ def main():
 
         if transcript:
             print(f"\nYOU > {transcript}")
+
+            command = extract_wake_command(transcript)
+
+            if command is None:
+                print("[WAKE] Clara was not addressed.")
+            elif command:
+                print(f"[WAKE] Clara activated.")
+                print(f"[COMMAND] {command}")
+            else:
+                print("[WAKE] Clara activated. Waiting for a command.")
         else:
             print("\n[VOICE] No speech was detected.")
 
