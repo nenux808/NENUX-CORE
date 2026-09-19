@@ -1,15 +1,25 @@
 import sqlite3
 import json
+from contextlib import contextmanager
 from pathlib import Path
 from datetime import datetime, UTC
 
 DB_PATH = Path(__file__).resolve().parent / "nenux_memory.db"
 
 
+@contextmanager
 def get_connection():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
-    return conn
+
+    try:
+        yield conn
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
 
 
 def init_database():
