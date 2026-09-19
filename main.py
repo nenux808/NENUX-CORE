@@ -43,8 +43,8 @@ from core.tasks import (
 )
 
 
-SYSTEM_PROMPT = f"""
-You are {CORE_NAME} v{CORE_VERSION} running locally on {NODE_NAME}.
+SYSTEM_PROMPT = """
+You are {core_name} v{core_version} running locally on {node_name}.
 
 You are an AI agent operating through the NENUX Core runtime.
 
@@ -180,7 +180,11 @@ When a tool fails:
 9. Stop after a reasonable number of failed recovery attempts.
 
 Be concise, practical and truthful.
-"""
+""".format(
+    core_name=CORE_NAME,
+    core_version=CORE_VERSION,
+    node_name=NODE_NAME,
+)
 
 
 def call_model(messages: list) -> str:
