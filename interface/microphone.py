@@ -95,15 +95,17 @@ def calibrate_microphone_threshold(
     calibration_chunks = max(1, int(calibration_seconds / chunk_seconds))
     levels: list[float] = []
 
-    for _ in range(calibration_chunks):
-        chunk = sd.rec(
-            frames_per_chunk,
-            samplerate=sample_rate,
-            channels=channels,
-            dtype="int16",
-        )
-        sd.wait()
-        levels.append(rms_level(np.asarray(chunk, dtype=np.int16)))
+    with sd.InputStream(
+        samplerate=sample_rate,
+        channels=channels,
+        dtype="int16",
+        blocksize=frames_per_chunk,
+    ) as stream:
+        for _ in range(calibration_chunks):
+            chunk, overflowed = stream.read(frames_per_chunk)
+            if overflowed:
+                continue
+            levels.append(rms_level(np.asarray(chunk, dtype=np.int16)))
 
     return adaptive_speech_threshold(levels)
 
@@ -179,47 +181,48 @@ def record_until_silence(
     speech_started = False
     silent_chunks = 0
 
-    for index in range(max_chunks):
-        chunk = sd.rec(
-            frames_per_chunk,
-            samplerate=sample_rate,
-            channels=channels,
-            dtype="int16",
-        )
-        sd.wait()
-        chunk = np.asarray(chunk, dtype=np.int16)
+    with sd.InputStream(
+        samplerate=sample_rate,
+        channels=channels,
+        dtype="int16",
+        blocksize=frames_per_chunk,
+    ) as stream:
+        for index in range(max_chunks):
+            chunk, overflowed = stream.read(frames_per_chunk)
+            if overflowed:
+                continue
 
-        level = rms_level(chunk)
+            chunk = np.asarray(chunk, dtype=np.int16)
+            level = rms_level(chunk)
 
-        if not speech_started:
-            pre_roll.append(chunk)
+            if not speech_started:
+                pre_roll.append(chunk)
 
-            # Start capture permissively from the microphone's actual energy.
-            # WebRTC VAD is intentionally not used here because it can reject
-            # valid speech before Whisper ever receives it.
-            if level >= speech_threshold:
-                speech_started = True
-                chunks.extend(list(pre_roll))
-                pre_roll.clear()
-            elif index + 1 >= start_chunks:
-                empty = np.zeros((0, channels), dtype=np.int16)
-                return _write_wav(path, empty, sample_rate, channels), False
-            continue
+                # Start capture permissively from actual microphone energy.
+                # A single continuous stream avoids gaps between audio chunks.
+                if level >= speech_threshold:
+                    speech_started = True
+                    chunks.extend(list(pre_roll))
+                    pre_roll.clear()
+                elif index + 1 >= start_chunks:
+                    empty = np.zeros((0, channels), dtype=np.int16)
+                    return _write_wav(path, empty, sample_rate, channels), False
+                continue
 
-        chunks.append(chunk)
+            chunks.append(chunk)
 
-        is_speech = chunk_contains_speech(
-            chunk,
-            speech_threshold=speech_threshold,
-            sample_rate=sample_rate,
-        )
+            is_speech = chunk_contains_speech(
+                chunk,
+                speech_threshold=speech_threshold,
+                sample_rate=sample_rate,
+            )
 
-        if is_speech:
-            silent_chunks = 0
-        else:
-            silent_chunks += 1
-            if silent_chunks >= silence_chunks_needed:
-                break
+            if is_speech:
+                silent_chunks = 0
+            else:
+                silent_chunks += 1
+                if silent_chunks >= silence_chunks_needed:
+                    break
 
     if not chunks:
         empty = np.zeros((0, channels), dtype=np.int16)
