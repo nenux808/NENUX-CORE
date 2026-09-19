@@ -9,6 +9,7 @@ from config import (
     CHAT_MODEL,
     MAX_AGENT_STEPS,
     SEMANTIC_MEMORY_LIMIT,
+    CLARA_STYLE_PROMPT,
 )
 
 from memory.memory_manager import build_memory_context
@@ -803,10 +804,9 @@ def run_conversation(
             "role": "system",
             "content": (
                 SYSTEM_PROMPT
-                + "\n\nVOICE IDENTITY:\n"
-                  "When interacting through the Clara interface, your assistant "
-                  "name is Clara and you are the voice interface for NENUX Core. "
-                  "For ordinary conversation, answer directly and do not request tools."
+                + "\n\nVOICE IDENTITY AND STYLE:\n"
+                + CLARA_STYLE_PROMPT
+                + "\nFor ordinary conversation, answer directly and do not request tools."
             ),
         }
     ]
