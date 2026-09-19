@@ -1,6 +1,7 @@
 import unittest
 
 from core.policy import (
+    enforce_lyrics_output_policy,
     is_history_query,
     is_lyrics_context_followup,
     is_media_content_request,
@@ -33,6 +34,22 @@ class TestPolicyMediaMemory(unittest.TestCase):
         text = "do you know any lyrics from Ocean Eyes by Billie Eilish?"
         self.assertTrue(is_media_content_request(text))
         self.assertFalse(memory_only_mode(text))
+
+    def test_long_lyric_output_is_replaced(self):
+        response = '"one two three four five six seven eight nine ten eleven twelve"'
+        filtered = enforce_lyrics_output_policy(
+            "show me lyrics from a song",
+            response,
+        )
+        self.assertNotEqual(filtered, response)
+        self.assertIn("brief summary", filtered)
+
+    def test_short_lyric_excerpt_can_pass(self):
+        response = '"one two three four five six seven eight nine ten"'
+        self.assertEqual(
+            enforce_lyrics_output_policy("any lyric from a song?", response),
+            response,
+        )
 
 
 if __name__ == "__main__":
