@@ -1,9 +1,10 @@
 """Continuous Clara voice interface for NENUX Core."""
 
 import tempfile
+import time
 from pathlib import Path
 
-from config import CORE_VERSION, VOICE_ASSISTANT_NAME
+from config import CORE_VERSION, VOICE_ASSISTANT_NAME, VOICE_SESSION_FOLLOWUP_TIMEOUT_SECONDS
 from interface.microphone import record_until_silence
 from interface.neural_tts import KokoroTTS
 from interface.session import append_session_turn
@@ -54,6 +55,7 @@ def main():
     tts = KokoroTTS()
     session_history: list[dict] = []
     session_active = False
+    last_activity_at: float | None = None
 
     print("=" * 56)
     print("              CLARA CONTINUOUS VOICE MODE")
@@ -83,6 +85,15 @@ def main():
                 if not transcript:
                     continue
 
+                if (
+                    session_active
+                    and last_activity_at is not None
+                    and time.monotonic() - last_activity_at
+                    > VOICE_SESSION_FOLLOWUP_TIMEOUT_SECONDS
+                ):
+                    session_active = False
+                    print("[SESSION] Follow-up window expired; wake phrase required.")
+
                 command, session_active = resolve_voice_command(
                     transcript,
                     session_active,
@@ -93,6 +104,7 @@ def main():
                     continue
 
                 if not command:
+                    last_activity_at = time.monotonic()
                     print("[WAKE] Clara activated, but no command was provided.\n")
                     continue
 
@@ -121,6 +133,7 @@ def main():
                     command,
                     reply,
                 )
+                last_activity_at = time.monotonic()
 
                 print(f"\nCLARA > {reply}")
                 print(f"[STATUS] {status.upper()}")
