@@ -8,6 +8,7 @@ from memory.database import get_recent_messages, init_database
 from memory.semantic_memory import init_semantic_memory
 from interface.microphone import record_wav
 from interface.speech_to_text import FasterWhisperSTT
+from interface.text_to_speech import Pyttsx3TTS
 from interface.wake_word import extract_wake_command
 
 
@@ -54,6 +55,9 @@ def main():
 
         print(f"\nCLARA > {reply}")
         print(f"[STATUS] {status.upper()}")
+
+        print("[VOICE] Speaking response...")
+        Pyttsx3TTS().speak(reply)
 
 
 if __name__ == "__main__":
