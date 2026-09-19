@@ -18,7 +18,8 @@ from config import (
     MICROPHONE_RECORD_SECONDS,
     MICROPHONE_SAMPLE_RATE,
     MICROPHONE_SILENCE_SECONDS,
-    MICROPHONE_SPEECH_START_CONFIRM_SECONDS,
+    MICROPHONE_SPEECH_START_WINDOW_SECONDS,
+    MICROPHONE_SPEECH_START_REQUIRED_CHUNKS,
     MICROPHONE_MIN_UTTERANCE_SECONDS,
     MICROPHONE_SPEECH_RMS_THRESHOLD,
     MICROPHONE_START_TIMEOUT_SECONDS,
@@ -175,16 +176,16 @@ def record_until_silence(
     start_chunks = max(1, int(start_timeout / chunk_seconds))
     silence_chunks_needed = max(1, int(silence_seconds / chunk_seconds))
     pre_roll_chunks = max(1, int(pre_roll_seconds / chunk_seconds))
-    speech_start_chunks_needed = max(
+    speech_start_window_chunks = max(
         1,
-        int(MICROPHONE_SPEECH_START_CONFIRM_SECONDS / chunk_seconds),
+        int(MICROPHONE_SPEECH_START_WINDOW_SECONDS / chunk_seconds),
     )
 
     chunks: list[np.ndarray] = []
     pre_roll: deque[np.ndarray] = deque(maxlen=pre_roll_chunks)
     speech_started = False
     silent_chunks = 0
-    speech_start_streak = 0
+    speech_votes: deque[bool] = deque(maxlen=speech_start_window_chunks)
 
     for index in range(max_chunks):
         chunk = sd.rec(
@@ -205,12 +206,9 @@ def record_until_silence(
         if not speech_started:
             pre_roll.append(chunk)
 
-            if is_speech:
-                speech_start_streak += 1
-            else:
-                speech_start_streak = 0
+            speech_votes.append(is_speech)
 
-            if speech_start_streak >= speech_start_chunks_needed:
+            if sum(speech_votes) >= MICROPHONE_SPEECH_START_REQUIRED_CHUNKS:
                 speech_started = True
                 chunks.extend(list(pre_roll))
                 pre_roll.clear()
