@@ -1,7 +1,7 @@
 import sqlite3
 import json
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, UTC
 
 DB_PATH = Path(__file__).resolve().parent / "nenux_memory.db"
 
@@ -80,7 +80,7 @@ def remember(key, value):
             (
                 key,
                 json.dumps(value, ensure_ascii=False),
-                datetime.utcnow().isoformat()
+                datetime.now(UTC).isoformat()
             )
         )
 
@@ -117,7 +117,7 @@ def log_action(tool, arguments, result, approved):
                 json.dumps(arguments, ensure_ascii=False),
                 json.dumps(result, ensure_ascii=False),
                 int(approved),
-                datetime.utcnow().isoformat()
+                datetime.now(UTC).isoformat()
             )
         )
 
@@ -131,7 +131,7 @@ def save_message(role: str, content: str):
             (
                 role,
                 content,
-                datetime.utcnow().isoformat()
+                datetime.now(UTC).isoformat()
             )
         )
 
@@ -195,7 +195,7 @@ def start_task_attempt(task_id: int) -> tuple[int, int]:
             (
                 task_id,
                 attempt_number,
-                datetime.utcnow().isoformat()
+                datetime.now(UTC).isoformat()
             )
         )
 
@@ -216,7 +216,7 @@ def finish_task_attempt(
             """,
             (
                 status,
-                datetime.utcnow().isoformat(),
+                datetime.now(UTC).isoformat(),
                 attempt_id
             )
         )
