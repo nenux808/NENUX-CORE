@@ -880,13 +880,12 @@ def run_conversation(
         }
     ]
     if interface_name:
-        # Voice conversations intentionally do not inherit legacy assistant
-        # identity text from the shared CLI history. User turns remain useful
-        # conversational context while Clara keeps her own interface identity.
+        # Voice callers provide an isolated in-memory Clara session history.
+        # Do not fetch or merge legacy CLI/database history here.
         messages.extend(
             message
             for message in history
-            if message.get("role") == "user"
+            if message.get("role") in {"user", "assistant"}
         )
     else:
         messages.extend(history)
