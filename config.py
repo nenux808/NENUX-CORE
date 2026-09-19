@@ -19,3 +19,10 @@ STT_COMPUTE_TYPE = "int8"
 MICROPHONE_SAMPLE_RATE = 16000
 MICROPHONE_CHANNELS = 1
 MICROPHONE_RECORD_SECONDS = 5
+
+VOICE_ASSISTANT_NAME = "Clara"
+VOICE_WAKE_PHRASE = "hey clara"
+STT_INITIAL_PROMPT = (
+    "This is a conversation with Clara, the voice interface for NENUX Core. "
+    "The user may begin commands with 'Hey Clara'."
+)
