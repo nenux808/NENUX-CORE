@@ -36,6 +36,13 @@ VOICE_SESSION_MAX_MESSAGES = 10
 
 VOICE_ASSISTANT_NAME = "Clara"
 VOICE_WAKE_PHRASE = "hey clara"
+VOICE_WAKE_ALIASES = (
+    "hey clara",
+    "hey cara",
+    "hey kara",
+    "hey clera",
+    "hey claraa",
+)
 STT_INITIAL_PROMPT = ""
 VOICE_SESSION_FOLLOWUP_TIMEOUT_SECONDS = 15.0
 
