@@ -39,6 +39,14 @@ class TestPolicyMediaMemory(unittest.TestCase):
     def test_direct_full_lyrics_request_is_blocked(self):
         self.assertTrue(is_full_lyrics_request("show me the lyrics", []))
 
+    def test_open_ended_lyrics_question_is_blocked(self):
+        self.assertTrue(
+            is_full_lyrics_request(
+                "do you know any lyrics from Ocean Eyes by Billie Eilish?",
+                [],
+            )
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
