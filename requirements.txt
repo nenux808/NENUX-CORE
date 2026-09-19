@@ -2,3 +2,4 @@
 # Ollama CLI/runtime is installed separately on the host machine.
 
 ollama==0.6.2
+faster-whisper==1.2.1
