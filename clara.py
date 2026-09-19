@@ -4,7 +4,7 @@ import tempfile
 from pathlib import Path
 
 from config import CORE_VERSION, VOICE_ASSISTANT_NAME
-from interface.microphone import record_wav
+from interface.microphone import record_until_silence
 from interface.neural_tts import KokoroTTS
 from interface.session import append_session_turn
 from interface.speech_to_text import FasterWhisperSTT
@@ -30,6 +30,22 @@ def is_stop_command(command: str) -> bool:
     return normalized in STOP_COMMANDS
 
 
+def resolve_voice_command(
+    transcript: str,
+    session_active: bool,
+) -> tuple[str | None, bool]:
+    """Resolve a transcript into a command and updated session-active state."""
+    wake_command = extract_wake_command(transcript)
+
+    if wake_command is not None:
+        return wake_command, True
+
+    if session_active:
+        return transcript.strip(), True
+
+    return None, False
+
+
 def main():
     init_database()
     init_semantic_memory()
@@ -37,13 +53,15 @@ def main():
     stt = FasterWhisperSTT()
     tts = KokoroTTS()
     session_history: list[dict] = []
+    session_active = False
 
     print("=" * 56)
     print("              CLARA CONTINUOUS VOICE MODE")
     print(f"                 NENUX CORE v{CORE_VERSION}")
     print("=" * 56)
-    print("Say 'Hey Clara' followed by your request.")
-    print("Say 'Hey Clara, stop listening' to exit.")
+    print("Start with 'Hey Clara' followed by your request.")
+    print("After Clara is active, normal follow-up speech does not need the wake phrase.")
+    print("Say 'stop listening' to exit the active session.")
     print("Press Ctrl+C at any time to stop.\n")
 
     try:
@@ -52,16 +70,23 @@ def main():
 
             while True:
                 print("[VOICE] Listening...")
-                record_wav(audio_path)
-                print("[VOICE] Transcribing...")
+                _, speech_detected = record_until_silence(audio_path)
 
+                if not speech_detected:
+                    print("YOU > [no speech]\n")
+                    continue
+
+                print("[VOICE] Transcribing...")
                 transcript = stt.transcribe_file(audio_path)
                 print(f"YOU > {transcript or '[no speech]'}")
 
                 if not transcript:
                     continue
 
-                command = extract_wake_command(transcript)
+                command, session_active = resolve_voice_command(
+                    transcript,
+                    session_active,
+                )
 
                 if command is None:
                     print("[WAKE] Clara was not addressed.\n")
@@ -71,7 +96,11 @@ def main():
                     print("[WAKE] Clara activated, but no command was provided.\n")
                     continue
 
-                print("[WAKE] Clara activated.")
+                if transcript.strip().lower().startswith("hey clara"):
+                    print("[WAKE] Clara activated.")
+                else:
+                    print("[SESSION] Follow-up accepted.")
+
                 print(f"[COMMAND] {command}")
 
                 if is_stop_command(command):
