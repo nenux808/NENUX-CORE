@@ -31,7 +31,6 @@ from tools.registry import execute_tool
 from core.planner import create_plan
 from core.evaluator import evaluate_steps
 from core.policy import (
-    is_full_lyrics_request,
     is_lyrics_context_followup,
     memory_only_mode,
     should_store_task_memory,
@@ -945,14 +944,6 @@ def process_user_request(
         "user",
         user_input
     )
-
-    if is_full_lyrics_request(user_input, history):
-        reply = (
-            "I can’t provide the full lyrics, but I can give you a brief summary "
-            "or a short verified excerpt."
-        )
-        save_message("assistant", reply)
-        return reply, "completed", get_recent_messages()
 
     route = route_request(user_input)
 
