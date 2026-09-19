@@ -7,3 +7,4 @@ sounddevice==0.5.3
 pyttsx3==2.99
 kokoro==0.9.4
 ddgs==9.16.0
+webrtcvad-wheels==2.0.14
