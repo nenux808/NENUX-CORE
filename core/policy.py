@@ -58,36 +58,6 @@ def is_lyrics_context_followup(text: str, history: list[dict]) -> bool:
     return normalized in followups
 
 
-def is_full_lyrics_request(text: str, history: list[dict] | None = None) -> bool:
-    """Detect requests that would require reproducing non-user-provided lyrics."""
-    normalized = text.lower().strip()
-
-    direct_patterns = (
-        "full lyrics",
-        "all the lyrics",
-        "show me lyrics",
-        "show me the lyrics",
-        "give me lyrics",
-        "give me the lyrics",
-        "share the lyrics",
-        "send me the lyrics",
-        "do you know any lyrics",
-        "do you know lyrics",
-        "any lyrics from",
-        "lyrics from",
-    )
-
-    if any(pattern in normalized for pattern in direct_patterns):
-        return True
-
-    # Any open request for non-user-provided song lyrics can trigger long-form
-    # reproduction, so keep it on the deterministic safe path.
-    if is_lyrics_request(normalized):
-        return True
-
-    return bool(history) and is_lyrics_context_followup(text, history)
-
-
 def is_history_query(text: str) -> bool:
     text = text.lower().strip()
 
