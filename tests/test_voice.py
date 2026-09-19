@@ -43,10 +43,8 @@ class TestVoiceInterface(unittest.TestCase):
 
 
 class FakeSegment:
-    def __init__(self, text: str, no_speech_prob: float = 0.0, avg_logprob: float = 0.0):
+    def __init__(self, text: str):
         self.text = text
-        self.no_speech_prob = no_speech_prob
-        self.avg_logprob = avg_logprob
 
 
 class FakeWhisperModel:
@@ -66,7 +64,7 @@ class FakeWhisperModel:
 
 class TestFasterWhisperSTT(unittest.TestCase):
 
-    def test_transcribe_file_joins_confident_segments(self):
+    def test_transcribe_file_joins_segments(self):
         import tempfile
         from pathlib import Path
 
@@ -80,15 +78,16 @@ class TestFasterWhisperSTT(unittest.TestCase):
             self.assertIsNone(fake_model.initial_prompt)
             self.assertFalse(fake_model.kwargs["condition_on_previous_text"])
 
-    def test_rejects_low_confidence_segment(self):
+    def test_keeps_low_confidence_metadata_out_of_custom_filtering(self):
         import tempfile
 
+        segment = FakeSegment("real speech")
+        segment.no_speech_prob = 0.9
+        segment.avg_logprob = -1.5
+
         with tempfile.NamedTemporaryFile(suffix=".wav") as audio:
-            fake_model = FakeWhisperModel(
-                [FakeSegment("phantom words", no_speech_prob=0.9, avg_logprob=-1.5)]
-            )
-            stt = FasterWhisperSTT(model=fake_model)
-            self.assertEqual(stt.transcribe_file(audio.name), "")
+            stt = FasterWhisperSTT(model=FakeWhisperModel([segment]))
+            self.assertEqual(stt.transcribe_file(audio.name), "real speech")
 
     def test_rejects_known_prompt_hallucination(self):
         import tempfile
