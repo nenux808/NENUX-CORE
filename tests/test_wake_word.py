@@ -17,6 +17,23 @@ class TestWakePhrase(unittest.TestCase):
             "open my files",
         )
 
+    def test_accepts_cara_variant(self):
+        self.assertEqual(
+            extract_wake_command("Hey, Cara, can you hear me?"),
+            "can you hear me?",
+        )
+
+    def test_accepts_kara_variant(self):
+        self.assertEqual(
+            extract_wake_command("Hey, Kara, can you hear me?"),
+            "can you hear me?",
+        )
+
+    def test_does_not_accept_plain_hey_without_name(self):
+        self.assertIsNone(
+            extract_wake_command("Hey, can you hear me?"),
+        )
+
     def test_ignores_unaddressed_transcript(self):
         self.assertIsNone(
             extract_wake_command("Can you hear me?"),
