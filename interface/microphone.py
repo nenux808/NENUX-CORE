@@ -11,6 +11,7 @@ from config import (
     MICROPHONE_CHUNK_SECONDS,
     MICROPHONE_MAX_ADAPTIVE_THRESHOLD,
     MICROPHONE_MAX_UTTERANCE_SECONDS,
+    MICROPHONE_MIN_VOICED_RATIO,
     MICROPHONE_NOISE_CALIBRATION_SECONDS,
     MICROPHONE_NOISE_MULTIPLIER,
     MICROPHONE_PRE_ROLL_SECONDS,
@@ -19,6 +20,8 @@ from config import (
     MICROPHONE_SILENCE_SECONDS,
     MICROPHONE_SPEECH_RMS_THRESHOLD,
     MICROPHONE_START_TIMEOUT_SECONDS,
+    MICROPHONE_WEBRTC_FRAME_MS,
+    MICROPHONE_WEBRTC_VAD_MODE,
 )
 
 
@@ -104,6 +107,49 @@ def calibrate_microphone_threshold(
     return adaptive_speech_threshold(levels)
 
 
+def webrtc_voiced_ratio(
+    audio: np.ndarray,
+    sample_rate: int = MICROPHONE_SAMPLE_RATE,
+    frame_ms: int = MICROPHONE_WEBRTC_FRAME_MS,
+    mode: int = MICROPHONE_WEBRTC_VAD_MODE,
+) -> float:
+    """Return the fraction of WebRTC VAD frames classified as human speech."""
+    if audio.size == 0:
+        return 0.0
+
+    import webrtcvad
+
+    mono = np.asarray(audio, dtype=np.int16).reshape(-1)
+    frame_samples = int(sample_rate * frame_ms / 1000)
+    if frame_samples <= 0:
+        return 0.0
+
+    vad = webrtcvad.Vad(mode)
+    voiced = 0
+    total = 0
+
+    for start in range(0, len(mono) - frame_samples + 1, frame_samples):
+        frame = mono[start : start + frame_samples]
+        total += 1
+        if vad.is_speech(frame.tobytes(), sample_rate):
+            voiced += 1
+
+    return (voiced / total) if total else 0.0
+
+
+def chunk_contains_speech(
+    audio: np.ndarray,
+    speech_threshold: float,
+    sample_rate: int = MICROPHONE_SAMPLE_RATE,
+    min_voiced_ratio: float = MICROPHONE_MIN_VOICED_RATIO,
+) -> bool:
+    """Require both sufficient energy and speech-like WebRTC VAD frames."""
+    if rms_level(audio) < speech_threshold:
+        return False
+
+    return webrtc_voiced_ratio(audio, sample_rate=sample_rate) >= min_voiced_ratio
+
+
 def record_until_silence(
     output_path: str | Path,
     sample_rate: int = MICROPHONE_SAMPLE_RATE,
@@ -117,6 +163,9 @@ def record_until_silence(
 ) -> tuple[Path, bool]:
     """Record until speech ends, returning (path, speech_detected)."""
     import sounddevice as sd
+
+    if channels != 1:
+        raise ValueError("WebRTC VAD capture currently requires mono audio.")
 
     path = Path(output_path)
     frames_per_chunk = max(1, int(chunk_seconds * sample_rate))
@@ -140,8 +189,11 @@ def record_until_silence(
         sd.wait()
         chunk = np.asarray(chunk, dtype=np.int16)
 
-        level = rms_level(chunk)
-        is_speech = level >= speech_threshold
+        is_speech = chunk_contains_speech(
+            chunk,
+            speech_threshold=speech_threshold,
+            sample_rate=sample_rate,
+        )
 
         if not speech_started:
             pre_roll.append(chunk)
@@ -169,4 +221,11 @@ def record_until_silence(
         return _write_wav(path, empty, sample_rate, channels), False
 
     audio = np.concatenate(chunks, axis=0)
+
+    # Final utterance-level validation: don't send clips dominated by noise
+    # into Whisper even if a transient accidentally started capture.
+    if webrtc_voiced_ratio(audio, sample_rate=sample_rate) < 0.12:
+        empty = np.zeros((0, channels), dtype=np.int16)
+        return _write_wav(path, empty, sample_rate, channels), False
+
     return _write_wav(path, audio, sample_rate, channels), True
