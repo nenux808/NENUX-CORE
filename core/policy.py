@@ -1,5 +1,26 @@
-﻿def is_history_query(text: str) -> bool:
+def is_media_content_request(text: str) -> bool:
     text = text.lower().strip()
+
+    media_terms = {
+        "lyric",
+        "lyrics",
+        "song",
+        "track",
+        "album",
+        "movie quote",
+        "film quote",
+        "book quote",
+        "poem",
+    }
+
+    return any(term in text for term in media_terms)
+
+
+def is_history_query(text: str) -> bool:
+    text = text.lower().strip()
+
+    if is_media_content_request(text):
+        return False
 
     phrases = {
         "have we",
