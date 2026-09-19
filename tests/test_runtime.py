@@ -8,6 +8,7 @@ from core.policy import (
 )
 
 from tools.filesystem import _safe_path
+from config import CORE_VERSION, CHAT_MODEL, EMBED_MODEL
 
 
 class TestPolicy(unittest.TestCase):
@@ -68,6 +69,23 @@ class TestWorkspaceSecurity(unittest.TestCase):
                 "..\\main.py"
             )
 
+
+class TestRuntimeSmoke(unittest.TestCase):
+
+    def test_main_imports(self):
+        import main
+
+        self.assertTrue(
+            callable(main.main)
+        )
+
+    def test_central_config_is_available(self):
+        self.assertEqual(
+            CORE_VERSION,
+            "0.11-dev"
+        )
+        self.assertTrue(CHAT_MODEL)
+        self.assertTrue(EMBED_MODEL)
 
 if __name__ == "__main__":
     unittest.main()
