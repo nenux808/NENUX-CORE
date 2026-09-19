@@ -2,6 +2,7 @@ import subprocess
 import sys
 
 from tools.filesystem import _safe_path
+from config import PYTHON_TIMEOUT_SECONDS
 
 
 def run_python(path: str) -> dict:
@@ -24,7 +25,7 @@ def run_python(path: str) -> dict:
             [sys.executable, str(target)],
             capture_output=True,
             text=True,
-            timeout=15,
+            timeout=PYTHON_TIMEOUT_SECONDS,
             cwd=str(target.parent)
         )
 
@@ -38,7 +39,7 @@ def run_python(path: str) -> dict:
     except subprocess.TimeoutExpired:
         return {
             "success": False,
-            "error": "Execution stopped after 15 seconds."
+            "error": f"Execution stopped after {PYTHON_TIMEOUT_SECONDS} seconds."
         }
 
     except Exception as exc:
