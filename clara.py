@@ -5,7 +5,7 @@ import time
 from pathlib import Path
 
 from config import CORE_VERSION, VOICE_ASSISTANT_NAME, VOICE_SESSION_FOLLOWUP_TIMEOUT_SECONDS
-from interface.microphone import record_until_silence
+from interface.microphone import calibrate_microphone_threshold, record_until_silence
 from interface.neural_tts import KokoroTTS
 from interface.session import append_session_turn
 from interface.speech_to_text import FasterWhisperSTT
@@ -57,6 +57,10 @@ def main():
     session_active = False
     last_activity_at: float | None = None
 
+    print("[VOICE] Calibrating microphone. Keep quiet for a moment...")
+    speech_threshold = calibrate_microphone_threshold()
+    print(f"[VOICE] Adaptive speech threshold: {speech_threshold:.4f}")
+
     print("=" * 56)
     print("              CLARA CONTINUOUS VOICE MODE")
     print(f"                 NENUX CORE v{CORE_VERSION}")
@@ -72,7 +76,10 @@ def main():
 
             while True:
                 print("[VOICE] Listening...")
-                _, speech_detected = record_until_silence(audio_path)
+                _, speech_detected = record_until_silence(
+                    audio_path,
+                    speech_threshold=speech_threshold,
+                )
 
                 if not speech_detected:
                     print("YOU > [no speech]\n")
