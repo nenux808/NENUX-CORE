@@ -5,7 +5,7 @@ from pathlib import Path
 
 from main import process_user_request
 from config import VOICE_ASSISTANT_NAME
-from memory.database import get_recent_messages, init_database
+from memory.database import init_database
 from memory.semantic_memory import init_semantic_memory
 from interface.microphone import record_wav
 from interface.speech_to_text import FasterWhisperSTT
@@ -48,10 +48,9 @@ def main():
         print(f"[COMMAND] {command}")
         print("[CORE] Processing command...")
 
-        history = get_recent_messages()
         reply, status, _ = process_user_request(
             command,
-            history,
+            [],
             interface_name=VOICE_ASSISTANT_NAME,
         )
 
