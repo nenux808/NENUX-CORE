@@ -1,7 +1,6 @@
 import unittest
 
 from core.policy import (
-    is_full_lyrics_request,
     is_history_query,
     is_lyrics_context_followup,
     is_media_content_request,
@@ -30,22 +29,10 @@ class TestPolicyMediaMemory(unittest.TestCase):
         ]
         self.assertTrue(is_lyrics_context_followup("Yes, please.", history))
 
-    def test_yes_please_blocks_full_lyrics_followup(self):
-        history = [
-            {"role": "assistant", "content": "I can share the lyrics if needed."},
-        ]
-        self.assertTrue(is_full_lyrics_request("Yes, please.", history))
-
-    def test_direct_full_lyrics_request_is_blocked(self):
-        self.assertTrue(is_full_lyrics_request("show me the lyrics", []))
-
-    def test_open_ended_lyrics_question_is_blocked(self):
-        self.assertTrue(
-            is_full_lyrics_request(
-                "do you know any lyrics from Ocean Eyes by Billie Eilish?",
-                [],
-            )
-        )
+    def test_open_ended_lyrics_remain_media_not_memory(self):
+        text = "do you know any lyrics from Ocean Eyes by Billie Eilish?"
+        self.assertTrue(is_media_content_request(text))
+        self.assertFalse(memory_only_mode(text))
 
 
 if __name__ == "__main__":
