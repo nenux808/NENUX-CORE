@@ -120,3 +120,29 @@ def memory_only_mode(text: str) -> bool:
 
 def should_store_task_memory(text: str) -> bool:
     return not memory_only_mode(text)
+
+
+def _quoted_spans(text: str) -> list[str]:
+    """Return simple quoted spans from generated text."""
+    return re.findall(r'["“](.+?)["”]', text, flags=re.DOTALL)
+
+
+def enforce_lyrics_output_policy(user_input: str, response: str) -> str:
+    """Prevent long generated lyric reproduction while preserving useful help."""
+    if not is_lyrics_request(user_input):
+        return response
+
+    quoted = _quoted_spans(response)
+    too_long_quote = any(len(span.split()) > 10 for span in quoted)
+
+    # Multi-line lyric-shaped output is also treated as long-form reproduction.
+    nonempty_lines = [line.strip() for line in response.splitlines() if line.strip()]
+    lyric_shaped = len(nonempty_lines) >= 6
+
+    if too_long_quote or lyric_shaped:
+        return (
+            "I found and verified the song, but I won’t reproduce a long lyric passage. "
+            "I can give you a brief summary, explain the meaning, or share a short verified excerpt."
+        )
+
+    return response
