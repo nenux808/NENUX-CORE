@@ -1,6 +1,5 @@
 {
   "name": "NENUX Core",
-  "version": "0.4",
   "node": "TITANX",
   "purpose": "A local general-purpose AI agent system designed to reason, remember, use tools, and complete goals.",
   "principles": [
