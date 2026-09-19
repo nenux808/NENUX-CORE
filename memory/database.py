@@ -22,6 +22,16 @@ def init_database():
               created_at TEXT NOT NULL
             );
 
+            CREATE TABLE IF NOT EXISTS memories (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              key TEXT NOT NULL,
+              value TEXT NOT NULL,
+              created_at TEXT NOT NULL
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_memories_key
+            ON memories(key);
+
         CREATE TABLE IF NOT EXISTS tasks (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             goal TEXT NOT NULL,
