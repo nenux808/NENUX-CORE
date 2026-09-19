@@ -1,3 +1,8 @@
+def is_lyrics_request(text: str) -> bool:
+    text = text.lower().strip()
+    return "lyric" in text or "lyrics" in text
+
+
 def is_media_content_request(text: str) -> bool:
     text = text.lower().strip()
 
@@ -14,6 +19,62 @@ def is_media_content_request(text: str) -> bool:
     }
 
     return any(term in text for term in media_terms)
+
+
+def _recent_history_text(history: list[dict], limit: int = 4) -> str:
+    recent = history[-limit:] if history else []
+    return " ".join(
+        str(item.get("content", ""))
+        for item in recent
+        if item.get("role") in {"user", "assistant"}
+    ).lower()
+
+
+def is_lyrics_context_followup(text: str, history: list[dict]) -> bool:
+    """Keep lyric/media intent active across short conversational follow-ups."""
+    normalized = text.lower().strip().rstrip(" .!?")
+    recent = _recent_history_text(history)
+
+    if "lyric" not in recent:
+        return False
+
+    followups = {
+        "yes",
+        "yes please",
+        "yeah",
+        "yeah please",
+        "sure",
+        "okay",
+        "ok",
+        "please",
+        "go ahead",
+        "show me",
+        "more",
+        "tell me more",
+    }
+
+    return normalized in followups
+
+
+def is_full_lyrics_request(text: str, history: list[dict] | None = None) -> bool:
+    """Detect requests that would require reproducing non-user-provided lyrics."""
+    normalized = text.lower().strip()
+
+    direct_patterns = (
+        "full lyrics",
+        "all the lyrics",
+        "show me lyrics",
+        "show me the lyrics",
+        "give me lyrics",
+        "give me the lyrics",
+        "share the lyrics",
+        "send me the lyrics",
+    )
+
+    if any(pattern in normalized for pattern in direct_patterns):
+        return True
+
+    return bool(history) and is_lyrics_context_followup(text, history)
 
 
 def is_history_query(text: str) -> bool:
