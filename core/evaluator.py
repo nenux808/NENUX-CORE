@@ -137,6 +137,9 @@ RULES:
 7. Mark "pending" if there is insufficient evidence.
 8. Later successful recovery may complete the overall task.
 9. Do not penalize a recovery task merely because the initial broken program failed as expected.
+10. Tool evidence must match the planned action. A web_search result does NOT prove that list_files or read_file occurred. A read_file result does NOT prove execution occurred.
+11. Never reinterpret a planned filesystem step as a web-retrieval step after the fact. If the planned action was not actually performed, mark it pending or failed.
+12. For a planned web-retrieval step, require a successful web_search result and ensure the final answer does not assert facts absent from the retrieved evidence.
 
 Return ONLY valid JSON.
 
