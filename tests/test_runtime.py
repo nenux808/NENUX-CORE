@@ -96,9 +96,13 @@ class TestRuntimeSmoke(unittest.TestCase):
 class TestDatabaseMemory(unittest.TestCase):
 
     def test_key_value_memory_round_trip(self):
-        with tempfile.TemporaryDirectory() as temp_dir:
-            test_db = Path(temp_dir) / "test_memory.db"
+        with tempfile.NamedTemporaryFile(
+            suffix=".db",
+            delete=False
+        ) as temp_file:
+            test_db = Path(temp_file.name)
 
+        try:
             with patch.object(
                 database,
                 "DB_PATH",
@@ -114,13 +118,17 @@ class TestDatabaseMemory(unittest.TestCase):
                     database.recall("runtime_test"),
                     {"value": 42}
                 )
-
-                database.get_connection().close()
+        finally:
+            test_db.unlink(missing_ok=True)
 
     def test_database_initializes_expected_tables(self):
-        with tempfile.TemporaryDirectory() as temp_dir:
-            test_db = Path(temp_dir) / "test_schema.db"
+        with tempfile.NamedTemporaryFile(
+            suffix=".db",
+            delete=False
+        ) as temp_file:
+            test_db = Path(temp_file.name)
 
+        try:
             with patch.object(
                 database,
                 "DB_PATH",
@@ -155,6 +163,8 @@ class TestDatabaseMemory(unittest.TestCase):
                     "task_attempts",
                 }.issubset(tables)
             )
+        finally:
+            test_db.unlink(missing_ok=True)
 
 if __name__ == "__main__":
     unittest.main()
