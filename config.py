@@ -28,10 +28,7 @@ VOICE_SESSION_MAX_MESSAGES = 10
 
 VOICE_ASSISTANT_NAME = "Clara"
 VOICE_WAKE_PHRASE = "hey clara"
-STT_INITIAL_PROMPT = (
-    "This is a conversation with Clara, the voice interface for NENUX Core. "
-    "The user may begin commands with 'Hey Clara'."
-)
+STT_INITIAL_PROMPT = "Hey Clara. Clara."
 
 # Clara response style is kept separate from the Core reasoning/tool policy.
 CLARA_STYLE_PROMPT = (
