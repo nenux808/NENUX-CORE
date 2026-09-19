@@ -2,6 +2,15 @@ import json
 
 from ollama import chat
 
+from config import (
+    CORE_NAME,
+    CORE_VERSION,
+    NODE_NAME,
+    CHAT_MODEL,
+    MAX_AGENT_STEPS,
+    SEMANTIC_MEMORY_LIMIT,
+)
+
 from memory.memory_manager import build_memory_context
 from memory.semantic_memory import (
     init_semantic_memory,
@@ -34,11 +43,8 @@ from core.tasks import (
 )
 
 
-MODEL = "qwen3:4b-instruct"
-
-
-SYSTEM_PROMPT = """
-You are NENUX Core v0.6 running locally on TITANX.
+SYSTEM_PROMPT = f"""
+You are {CORE_NAME} v{CORE_VERSION} running locally on {NODE_NAME}.
 
 You are an AI agent operating through the NENUX Core runtime.
 
@@ -179,7 +185,7 @@ Be concise, practical and truthful.
 
 def call_model(messages: list) -> str:
     response = chat(
-        model=MODEL,
+        model=CHAT_MODEL,
         messages=messages
     )
 
@@ -286,7 +292,7 @@ def run_agent(
 
     semantic_context = build_semantic_context(
         user_input,
-        limit=5
+        limit=SEMANTIC_MEMORY_LIMIT
     )
 
     memory_mode = memory_only_mode(user_input)
@@ -341,7 +347,7 @@ Use tools again when current evidence is required.
         }
     )
 
-    max_steps = 15
+    max_steps = MAX_AGENT_STEPS
 
     tool_trace = []
 
@@ -785,8 +791,8 @@ def main():
     history = get_recent_messages()
 
     print("=" * 56)
-    print("                 NENUX CORE v0.10")
-    print("                 TITANX NODE")
+    print(f"                 {CORE_NAME.upper()} v{CORE_VERSION}")
+    print(f"                 {NODE_NAME} NODE")
     print("        HARDENED AGENT RUNTIME ONLINE")
     print("=" * 56)
 
