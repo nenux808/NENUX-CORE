@@ -13,6 +13,18 @@ class TestRequestRouter(unittest.TestCase):
     def test_execution_request_routes_to_agent(self):
         self.assertEqual(route_request("run the Python script"), "agent_task")
 
+    def test_current_information_routes_to_agent(self):
+        self.assertEqual(
+            route_request("what is the weather in Melbourne right now?"),
+            "agent_task",
+        )
+
+    def test_explicit_web_search_routes_to_agent(self):
+        self.assertEqual(
+            route_request("search the web for NENUX Core"),
+            "agent_task",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
