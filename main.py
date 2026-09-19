@@ -311,7 +311,8 @@ def requires_current_file_read(user_input: str) -> bool:
 
 def run_agent(
     user_input: str,
-    history: list
+    history: list,
+    retrieval_required: bool = False,
 ):
     memory_context = build_memory_context()
 
@@ -392,6 +393,7 @@ Use tools again when current evidence is required.
 
     forced_execution_reminder = False
     forced_read_reminder = False
+    forced_retrieval_reminder = False
 
     for step_number in range(
         max_steps
@@ -411,6 +413,36 @@ Use tools again when current evidence is required.
                 entry["tool"]
                 for entry in tool_trace
             }
+
+            if (
+                retrieval_required
+                and "web_search" not in used_tools
+                and not forced_retrieval_reminder
+            ):
+                forced_retrieval_reminder = True
+
+                messages.append(
+                    {
+                        "role": "assistant",
+                        "content": response
+                    }
+                )
+
+                messages.append(
+                    {
+                        "role": "user",
+                        "content": (
+                            "RUNTIME RETRIEVAL VALIDATION FAILED: "
+                            "This request was classified as needing external retrieval, "
+                            "but web_search has not been used during this turn. "
+                            "Do not provide a final answer yet. Search the web for the "
+                            "specific entity or information requested, then answer only "
+                            "from the retrieved evidence."
+                        )
+                    }
+                )
+
+                continue
 
             if (
                 execution_required
@@ -928,7 +960,8 @@ def process_user_request(
     try:
         reply, tool_trace = run_agent(
             user_input,
-            history
+            history,
+            retrieval_required=(route == "retrieval"),
         )
 
         task_status = evaluate_task(
