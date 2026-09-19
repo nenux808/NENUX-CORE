@@ -44,7 +44,7 @@ from core.tasks import (
 
 
 SYSTEM_PROMPT = """
-You are {core_name} v{core_version} running locally on {node_name}.
+You are __CORE_NAME__ v__CORE_VERSION__ running locally on __NODE_NAME__.
 
 You are an AI agent operating through the NENUX Core runtime.
 
@@ -180,10 +180,13 @@ When a tool fails:
 9. Stop after a reasonable number of failed recovery attempts.
 
 Be concise, practical and truthful.
-""".format(
-    core_name=CORE_NAME,
-    core_version=CORE_VERSION,
-    node_name=NODE_NAME,
+"""
+
+SYSTEM_PROMPT = (
+    SYSTEM_PROMPT
+    .replace("__CORE_NAME__", CORE_NAME)
+    .replace("__CORE_VERSION__", CORE_VERSION)
+    .replace("__NODE_NAME__", NODE_NAME)
 )
 
 
