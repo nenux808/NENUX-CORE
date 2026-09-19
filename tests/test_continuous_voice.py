@@ -6,7 +6,11 @@ from unittest.mock import patch
 import numpy as np
 
 from clara import resolve_voice_command
-from config import MICROPHONE_MIN_VOICED_RATIO, MICROPHONE_WEBRTC_VAD_MODE
+from config import (
+    MICROPHONE_MIN_VOICED_RATIO,
+    MICROPHONE_SPEECH_START_REQUIRED_CHUNKS,
+    MICROPHONE_WEBRTC_VAD_MODE,
+)
 from interface.microphone import adaptive_speech_threshold, chunk_contains_speech, rms_level
 
 
@@ -72,8 +76,12 @@ class TestVoiceActivityHelpers(unittest.TestCase):
     def test_vad_uses_aggressive_mode(self):
         self.assertEqual(MICROPHONE_WEBRTC_VAD_MODE, 3)
 
-    def test_vad_requires_majority_voiced_frames(self):
-        self.assertGreaterEqual(MICROPHONE_MIN_VOICED_RATIO, 0.5)
+    def test_vad_accepts_measured_speech_profile(self):
+        self.assertGreaterEqual(MICROPHONE_MIN_VOICED_RATIO, 0.35)
+        self.assertLessEqual(MICROPHONE_MIN_VOICED_RATIO, 0.4)
+
+    def test_start_gate_allows_natural_gaps(self):
+        self.assertEqual(MICROPHONE_SPEECH_START_REQUIRED_CHUNKS, 2)
 
 
 class TestContinuousVoiceRouting(unittest.TestCase):
