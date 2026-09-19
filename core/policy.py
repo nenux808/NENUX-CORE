@@ -71,9 +71,18 @@ def is_full_lyrics_request(text: str, history: list[dict] | None = None) -> bool
         "give me the lyrics",
         "share the lyrics",
         "send me the lyrics",
+        "do you know any lyrics",
+        "do you know lyrics",
+        "any lyrics from",
+        "lyrics from",
     )
 
     if any(pattern in normalized for pattern in direct_patterns):
+        return True
+
+    # Any open request for non-user-provided song lyrics can trigger long-form
+    # reproduction, so keep it on the deterministic safe path.
+    if is_lyrics_request(normalized):
         return True
 
     return bool(history) and is_lyrics_context_followup(text, history)
