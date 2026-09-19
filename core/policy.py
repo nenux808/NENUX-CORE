@@ -1,3 +1,5 @@
+import re
+
 def is_lyrics_request(text: str) -> bool:
     text = text.lower().strip()
     return "lyric" in text or "lyrics" in text
@@ -32,7 +34,7 @@ def _recent_history_text(history: list[dict], limit: int = 4) -> str:
 
 def is_lyrics_context_followup(text: str, history: list[dict]) -> bool:
     """Keep lyric/media intent active across short conversational follow-ups."""
-    normalized = text.lower().strip().rstrip(" .!?")
+    normalized = re.sub(r"[^a-z0-9]+", " ", text.lower()).strip()
     recent = _recent_history_text(history)
 
     if "lyric" not in recent:
