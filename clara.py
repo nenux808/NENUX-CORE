@@ -3,7 +3,7 @@
 import tempfile
 from pathlib import Path
 
-from config import VOICE_ASSISTANT_NAME
+from config import CORE_VERSION, VOICE_ASSISTANT_NAME
 from interface.microphone import record_wav
 from interface.neural_tts import KokoroTTS
 from interface.session import append_session_turn
@@ -40,7 +40,7 @@ def main():
 
     print("=" * 56)
     print("              CLARA CONTINUOUS VOICE MODE")
-    print("                 NENUX CORE v0.11-dev")
+    print(f"                 NENUX CORE v{CORE_VERSION}")
     print("=" * 56)
     print("Say 'Hey Clara' followed by your request.")
     print("Say 'Hey Clara, stop listening' to exit.")
