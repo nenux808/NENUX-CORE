@@ -26,6 +26,12 @@ class TestRequestRouter(unittest.TestCase):
             "agent_task",
         )
 
+    def test_lyrics_request_routes_to_retrieval(self):
+        self.assertEqual(
+            route_request("do you remember any lyric from Ocean Eyes?"),
+            "retrieval",
+        )
+
     @patch("core.router._model_route", return_value="retrieval")
     def test_obscure_youtube_channel_can_route_to_retrieval(self, mock_route):
         self.assertEqual(
