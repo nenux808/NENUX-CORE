@@ -4,3 +4,4 @@
 ollama==0.6.2
 faster-whisper==1.2.1
 sounddevice==0.5.3
+pyttsx3==2.99
