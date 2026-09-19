@@ -1,8 +1,7 @@
 ﻿import json
 from ollama import chat
 
-
-MODEL = "qwen3:4b-instruct"
+from config import CHAT_MODEL
 
 
 PLANNER_PROMPT = """
@@ -47,7 +46,7 @@ Return ONLY valid JSON:
 def create_plan(goal: str) -> list[str]:
 
     response = chat(
-        model=MODEL,
+        model=CHAT_MODEL,
         messages=[
             {
                 "role": "system",
