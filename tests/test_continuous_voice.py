@@ -8,7 +8,7 @@ import numpy as np
 from clara import resolve_voice_command
 from config import (
     MICROPHONE_MIN_VOICED_RATIO,
-    MICROPHONE_SPEECH_START_REQUIRED_CHUNKS,
+    MICROPHONE_SPEECH_RMS_THRESHOLD,
     MICROPHONE_WEBRTC_VAD_MODE,
 )
 from interface.microphone import adaptive_speech_threshold, chunk_contains_speech, rms_level
@@ -80,8 +80,8 @@ class TestVoiceActivityHelpers(unittest.TestCase):
         self.assertGreaterEqual(MICROPHONE_MIN_VOICED_RATIO, 0.35)
         self.assertLessEqual(MICROPHONE_MIN_VOICED_RATIO, 0.4)
 
-    def test_start_gate_allows_natural_gaps(self):
-        self.assertEqual(MICROPHONE_SPEECH_START_REQUIRED_CHUNKS, 2)
+    def test_start_gate_floor_is_permissive_for_measured_voice(self):
+        self.assertLessEqual(MICROPHONE_SPEECH_RMS_THRESHOLD, 0.002)
 
 
 class TestContinuousVoiceRouting(unittest.TestCase):
