@@ -1,8 +1,7 @@
 import json
 from ollama import chat
 
-
-MODEL = "qwen3:4b-instruct"
+from config import CHAT_MODEL
 
 
 EVALUATOR_PROMPT = """
@@ -175,7 +174,7 @@ def evaluate_steps(
     }
 
     response = chat(
-        model=MODEL,
+        model=CHAT_MODEL,
         messages=[
             {
                 "role": "system",
