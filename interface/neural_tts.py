@@ -1,5 +1,8 @@
 """Local neural text-to-speech for Clara using Kokoro."""
 
+import re
+import unicodedata
+
 import numpy as np
 import sounddevice as sd
 
@@ -8,6 +11,19 @@ from config import (
     CLARA_TTS_SPEED,
     CLARA_TTS_VOICE,
 )
+
+
+def sanitize_for_speech(text: str) -> str:
+    """Remove visual-only symbols that should not be spoken aloud."""
+    cleaned = "".join(
+        char
+        for char in text
+        if not unicodedata.category(char).startswith(("So", "Sk"))
+    )
+    cleaned = re.sub(r"\s+([,.!?;:])", r"\1", cleaned)
+    cleaned = re.sub(r"[ \t]{2,}", " ", cleaned)
+    cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
+    return cleaned.strip()
 
 
 class KokoroTTS:
@@ -29,7 +45,7 @@ class KokoroTTS:
         return self._pipeline
 
     def speak(self, text: str) -> None:
-        message = text.strip()
+        message = sanitize_for_speech(text)
         if not message:
             return
 
