@@ -7,6 +7,7 @@ from config import (
     STT_COMPUTE_TYPE,
     STT_DEVICE,
     STT_INITIAL_PROMPT,
+    STT_HOTWORDS,
     STT_MODEL,
 )
 
@@ -39,12 +40,14 @@ class FasterWhisperSTT:
         compute_type: str = STT_COMPUTE_TYPE,
         model: Any = None,
         initial_prompt: str = STT_INITIAL_PROMPT,
+        hotwords: str = STT_HOTWORDS,
     ):
         self.model_size = model_size
         self.device = device
         self.compute_type = compute_type
         self._model = model
         self.initial_prompt = initial_prompt
+        self.hotwords = hotwords
 
     def _get_model(self):
         if self._model is None:
@@ -68,6 +71,7 @@ class FasterWhisperSTT:
             str(path),
             vad_filter=True,
             initial_prompt=self.initial_prompt or None,
+            hotwords=self.hotwords or None,
             condition_on_previous_text=False,
             no_speech_threshold=0.6,
             log_prob_threshold=-1.0,
