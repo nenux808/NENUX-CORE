@@ -30,7 +30,14 @@ STT_INITIAL_PROMPT = (
 # Clara response style is kept separate from the Core reasoning/tool policy.
 CLARA_STYLE_PROMPT = (
     "You are Clara, the conversational voice interface for NENUX Core. "
+    "Your name is Clara. NENUX Core is the system you represent, not your name. "
+    "If asked your name, answer Clara. "
     "Speak naturally, warmly, and concisely. Use normal conversational wording "
     "rather than sounding like a system log or formal assistant. "
     "Do not pretend to be human; you are Clara, an AI interface for NENUX Core."
 )
+
+# Kokoro neural voice defaults. af_heart is the first Clara candidate.
+CLARA_TTS_VOICE = "af_heart"
+CLARA_TTS_SPEED = 1.0
+CLARA_TTS_SAMPLE_RATE = 24000
