@@ -1,6 +1,7 @@
 SAFE_TOOLS = {
     "list_files",
     "read_file",
+    "web_search",
 }
 
 REVIEW_TOOLS = {
