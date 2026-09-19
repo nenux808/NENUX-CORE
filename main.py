@@ -797,6 +797,7 @@ def evaluate_task(
 def run_conversation(
     user_input: str,
     history: list,
+    interface_name: str | None = None,
 ) -> str:
     """Answer a non-action conversational request without tool planning."""
     messages = [
@@ -812,7 +813,18 @@ def run_conversation(
             ),
         }
     ]
-    messages.extend(history)
+    if interface_name:
+        # Voice conversations intentionally do not inherit legacy assistant
+        # identity text from the shared CLI history. User turns remain useful
+        # conversational context while Clara keeps her own interface identity.
+        messages.extend(
+            message
+            for message in history
+            if message.get("role") == "user"
+        )
+    else:
+        messages.extend(history)
+
     messages.append(
         {
             "role": "user",
@@ -824,6 +836,7 @@ def run_conversation(
 def process_user_request(
     user_input: str,
     history: list,
+    interface_name: str | None = None,
 ):
     """Run one new user request through the same tracked NENUX Core pipeline."""
     original_goal = user_input
@@ -838,6 +851,7 @@ def process_user_request(
         reply = run_conversation(
             user_input,
             history,
+            interface_name=interface_name,
         )
 
         save_message(
