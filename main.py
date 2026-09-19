@@ -790,6 +790,133 @@ def evaluate_task(
     return task_status
 
 
+
+def process_user_request(
+    user_input: str,
+    history: list,
+):
+    """Run one new user request through the same tracked NENUX Core pipeline."""
+    original_goal = user_input
+
+    save_message(
+        "user",
+        user_input
+    )
+
+    if memory_only_mode(user_input):
+        task_id = create_task(
+            user_input
+        )
+
+        step_id = add_step(
+            task_id,
+            "Answer from relevant long-term memory"
+        )
+
+        step_records = [
+            {
+                "step_id": 1,
+                "database_id": step_id,
+                "description": "Answer from relevant long-term memory",
+                "original_status": "pending"
+            }
+        ]
+
+        print("\n[TASK PLAN]")
+        print(
+            "[ ] 1. Answer from relevant "
+            "long-term memory"
+        )
+
+    else:
+        (
+            task_id,
+            step_records
+        ) = create_tracked_task(
+            user_input
+        )
+
+        for record in step_records:
+            record["original_status"] = "pending"
+
+    (
+        attempt_id,
+        attempt_number
+    ) = start_task_attempt(
+        task_id
+    )
+
+    print(
+        f"\n[ATTEMPT] Task #{task_id} / "
+        f"Attempt #{attempt_number}"
+    )
+
+    try:
+        reply, tool_trace = run_agent(
+            user_input,
+            history
+        )
+
+        task_status = evaluate_task(
+            goal=original_goal,
+            task_id=task_id,
+            step_records=step_records,
+            tool_trace=tool_trace,
+            final_response=reply
+        )
+
+        finish_task_attempt(
+            attempt_id,
+            task_status
+        )
+
+        if (
+            task_status == "completed"
+            and should_store_task_memory(original_goal)
+        ):
+            memory_record = (
+                "Completed NENUX task.\n"
+                f"Goal: {original_goal}\n"
+                f"Outcome: {reply}"
+            )
+
+            try:
+                stored = add_semantic_memory(
+                    memory_record,
+                    kind="completed_task"
+                )
+
+                if stored:
+                    print(
+                        "\n[MEMORY] "
+                        "Stored completed task "
+                        "in long-term memory."
+                    )
+
+            except Exception as memory_error:
+                print(
+                    "\n[MEMORY WARNING] "
+                    f"{memory_error}"
+                )
+
+        save_message(
+            "assistant",
+            reply
+        )
+
+        return reply, task_status, get_recent_messages()
+
+    except Exception:
+        try:
+            finish_task_attempt(
+                attempt_id,
+                "error"
+            )
+        except Exception:
+            pass
+
+        raise
+
 def main():
 
     init_database()
