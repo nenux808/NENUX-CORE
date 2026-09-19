@@ -72,9 +72,10 @@ class FakeSegment:
 
 
 class FakeWhisperModel:
-    def transcribe(self, path: str, vad_filter: bool):
+    def transcribe(self, path: str, vad_filter: bool, initial_prompt: str):
         self.path = path
         self.vad_filter = vad_filter
+        self.initial_prompt = initial_prompt
         return (
             [
                 FakeSegment(" Hello "),
@@ -98,6 +99,7 @@ class TestFasterWhisperSTT(unittest.TestCase):
 
             self.assertEqual(transcript, "Hello from NENUX")
             self.assertTrue(fake_model.vad_filter)
+            self.assertIn("Clara", fake_model.initial_prompt)
 
     def test_transcribe_file_requires_existing_audio(self):
         stt = FasterWhisperSTT(model=FakeWhisperModel())
