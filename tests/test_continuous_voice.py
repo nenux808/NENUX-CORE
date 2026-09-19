@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 
 from clara import resolve_voice_command
-from interface.microphone import rms_level
+from interface.microphone import adaptive_speech_threshold, rms_level
 
 
 class TestVoiceActivityHelpers(unittest.TestCase):
@@ -14,6 +14,22 @@ class TestVoiceActivityHelpers(unittest.TestCase):
     def test_rms_level_detects_signal(self):
         audio = np.full((1600, 1), 2000, dtype=np.int16)
         self.assertGreater(rms_level(audio), 0.01)
+
+    def test_adaptive_threshold_respects_floor(self):
+        self.assertEqual(
+            adaptive_speech_threshold([0.0002, 0.0003, 0.0004], floor=0.002),
+            0.002,
+        )
+
+    def test_adaptive_threshold_tracks_room_noise(self):
+        threshold = adaptive_speech_threshold(
+            [0.002, 0.0022, 0.0024],
+            floor=0.001,
+            multiplier=1.8,
+            ceiling=0.008,
+        )
+        self.assertGreater(threshold, 0.003)
+        self.assertLessEqual(threshold, 0.008)
 
 
 class TestContinuousVoiceRouting(unittest.TestCase):
