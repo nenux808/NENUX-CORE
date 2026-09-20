@@ -286,6 +286,24 @@ def _enforce_tool_action_matching(
         elif "run_python" in description or "execute the python" in description or "execute the script" in description:
             required_tool = "run_python"
 
+        if required_tool == "open_gmail" and required_tool in used_tools:
+            gmail_results = [
+                entry.get("result", {})
+                for entry in tool_trace
+                if isinstance(entry, dict) and entry.get("tool") == "open_gmail"
+            ]
+            if not any(
+                result.get("success") and result.get("opened")
+                for result in gmail_results
+                if isinstance(result, dict)
+            ):
+                evaluation_map[step_id] = {
+                    "step_id": step_id,
+                    "status": "pending",
+                    "reason": "Gmail has not actually opened yet.",
+                }
+                continue
+
         if required_tool == "open_chrome_url" and required_tool in used_tools:
             open_results = [
                 entry.get("result", {})
