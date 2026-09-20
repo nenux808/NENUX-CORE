@@ -7,6 +7,8 @@ from config import (
     CORE_VERSION,
     NODE_NAME,
     CHAT_MODEL,
+    MODEL_CONTEXT_TOKENS,
+    TOOL_RESULT_CONTEXT_CHARS,
     MAX_AGENT_STEPS,
     SEMANTIC_MEMORY_LIMIT,
     CLARA_STYLE_PROMPT,
@@ -52,6 +54,7 @@ from core.policy import (
     is_lyrics_context_followup,
     is_media_content_request,
     memory_only_mode,
+    needs_code_target_clarification,
     recent_browser_media_request,
     should_store_task_memory,
 )
@@ -415,7 +418,8 @@ def call_model(
 ) -> str:
     response = chat(
         model=model_name or CHAT_MODEL,
-        messages=messages
+        messages=messages,
+        options={"num_ctx": MODEL_CONTEXT_TOKENS},
     )
 
     return response.message.content.strip()
@@ -524,6 +528,22 @@ def requires_current_file_read(user_input: str) -> bool:
     return any(
         phrase in text
         for phrase in read_words
+    )
+
+
+def _tool_result_for_context(result: dict) -> str:
+    """Serialize tool evidence without allowing huge pages to exhaust context."""
+    text = json.dumps(
+        result,
+        ensure_ascii=False,
+    )
+    if len(text) <= TOOL_RESULT_CONTEXT_CHARS:
+        return text
+
+    omitted = len(text) - TOOL_RESULT_CONTEXT_CHARS
+    return (
+        text[:TOOL_RESULT_CONTEXT_CHARS]
+        + f"... [truncated {omitted} chars for model context]"
     )
 
 
@@ -1046,10 +1066,7 @@ Use tools again when current evidence is required.
                 "role": "user",
                 "content": (
                     "CURRENT-TURN TOOL RESULT:\n"
-                    + json.dumps(
-                        result,
-                        ensure_ascii=False
-                    )
+                    + _tool_result_for_context(result)
                 )
             }
         )
@@ -1316,6 +1333,15 @@ def process_user_request(
 ):
     """Run one new user request through the same tracked NENUX Core pipeline."""
     original_goal = user_input
+
+    if needs_code_target_clarification(user_input, history):
+        reply = (
+            "Which code do you want me to debug? "
+            "Give me the file name or paste the error/code first."
+        )
+        save_message("user", user_input)
+        save_message("assistant", reply)
+        return reply, "completed", get_recent_messages()
 
     save_message(
         "user",
