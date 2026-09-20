@@ -31,6 +31,7 @@ from tools.registry import execute_tool
 from core.planner import create_plan
 from core.evaluator import evaluate_steps
 from core.policy import (
+    document_indexing_requested,
     enforce_lyrics_output_policy,
     is_effective_lyrics_request,
     is_lyrics_context_followup,
@@ -152,6 +153,8 @@ LOCAL DOCUMENT RETRIEVAL
 Use index_document to index one supported text document in the NENUX workspace.
 Use index_workspace_documents to index all supported text documents under workspace.
 Use search_documents to answer questions from indexed local documents.
+Do NOT call index_document or index_workspace_documents unless the user explicitly asks to index or reindex.
+For ordinary document questions, search the existing index directly.
 Treat retrieved chunks as evidence tied to their source_path. Do not invent file content
 that is absent from the retrieved chunks. If no relevant chunks are found, say so.
 
@@ -629,6 +632,28 @@ Use tools again when current evidence is required.
             "arguments",
             {}
         )
+
+        if (
+            tool_name in {"index_document", "index_workspace_documents"}
+            and not document_indexing_requested(user_input)
+        ):
+            messages.append(
+                {
+                    "role": "assistant",
+                    "content": response,
+                }
+            )
+            messages.append(
+                {
+                    "role": "user",
+                    "content": (
+                        "RUNTIME DOCUMENT POLICY: The user did not ask to index or reindex documents. "
+                        "Do not call an indexing tool for this request. Use search_documents directly "
+                        "against the existing index. Only index when the user explicitly requests it."
+                    ),
+                }
+            )
+            continue
 
         if memory_mode:
             messages.append({
@@ -1112,9 +1137,20 @@ def process_user_request(
             task_status
         )
 
+        document_tools_used = {
+            entry.get("tool")
+            for entry in tool_trace
+            if isinstance(entry, dict)
+        } & {
+            "index_document",
+            "index_workspace_documents",
+            "search_documents",
+        }
+
         if (
             task_status == "completed"
             and route != "retrieval"
+            and not document_tools_used
             and should_store_task_memory(original_goal)
         ):
             memory_record = (
@@ -1294,8 +1330,19 @@ def main():
                 task_status
             )
 
+            document_tools_used = {
+                entry.get("tool")
+                for entry in tool_trace
+                if isinstance(entry, dict)
+            } & {
+                "index_document",
+                "index_workspace_documents",
+                "search_documents",
+            }
+
             if (
                 task_status == "completed"
+                and not document_tools_used
                 and should_store_task_memory(original_goal)
             ):
 
