@@ -216,3 +216,36 @@ def is_chrome_profile_followup(text: str, history: list[dict]) -> bool:
         or "which profile" in recent_assistant
         or "profile should i use" in recent_assistant
     ) and recent_browser_media_request(history) is not None
+
+
+
+def is_browser_media_correction_followup(text: str, history: list[dict]) -> bool:
+    """Keep playback intent active when the user corrects a wrong result."""
+    if recent_browser_media_request(history) is None:
+        return False
+
+    normalized = re.sub(r"[^a-z0-9 -]+", " ", text.lower()).strip()
+
+    correction_terms = (
+        "wrong video",
+        "wrong song",
+        "wrong one",
+        "search again",
+        "search on youtube",
+        "i need",
+        "the song name is",
+        "the artist name is",
+        "the artist's name is",
+        "it is a song",
+        "it's a song",
+        "single rap video",
+    )
+
+    if any(term in normalized for term in correction_terms):
+        return True
+
+    # Spelled-out corrections such as S-H-A-N-P-U-T-H-A or T-H-R-I-L-L-I-U-M.
+    if re.fullmatch(r"(?:[a-z]-){2,}[a-z]", normalized):
+        return True
+
+    return False
