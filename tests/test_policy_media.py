@@ -1,6 +1,7 @@
 import unittest
 
 from core.policy import (
+    document_indexing_requested,
     enforce_lyrics_output_policy,
     is_effective_lyrics_request,
     is_history_query,
@@ -74,6 +75,19 @@ class TestPolicyMediaMemory(unittest.TestCase):
         )
         self.assertNotEqual(filtered, response)
         self.assertIn("brief summary", filtered)
+
+    def test_document_indexing_requires_explicit_intent(self):
+        self.assertTrue(
+            document_indexing_requested("index my workspace documents")
+        )
+        self.assertTrue(
+            document_indexing_requested("reindex the report files")
+        )
+        self.assertFalse(
+            document_indexing_requested(
+                "what does my document say about the retrieval system?"
+            )
+        )
 
 
 if __name__ == "__main__":
