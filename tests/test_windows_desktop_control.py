@@ -85,6 +85,25 @@ class TestWindowsDesktopControl(unittest.TestCase):
         self.assertEqual(result["action"], "unmute")
         mock_press.assert_called_once()
 
+    @patch("tools.windows_desktop_control._press_chord")
+    @patch("tools.windows_desktop_control.focus_chrome")
+    def test_close_all_tabs_uses_window_close_shortcut(
+        self,
+        mock_focus,
+        mock_chord,
+    ):
+        mock_focus.return_value = {
+            "success": True,
+            "title": "Chrome",
+        }
+
+        result = chrome_tab_control("close_all_tabs")
+
+        self.assertTrue(result["success"])
+        self.assertEqual(result["action"], "close_all_tabs")
+        mock_focus.assert_called_once()
+        mock_chord.assert_called_once()
+
 
 if __name__ == "__main__":
     unittest.main()
