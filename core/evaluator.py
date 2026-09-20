@@ -253,7 +253,9 @@ def _enforce_tool_action_matching(
         description = str(step.get("description", "")).lower()
         required_tool = None
 
-        if "open_chrome_url" in description or "open the verified youtube video" in description:
+        if "list_chrome_profiles" in description or "list available local chrome profiles" in description:
+            required_tool = "list_chrome_profiles"
+        elif "open_chrome_url" in description or "open the verified youtube video" in description:
             required_tool = "open_chrome_url"
         elif "index_workspace_documents" in description or "index all supported workspace documents" in description:
             required_tool = "index_workspace_documents"
