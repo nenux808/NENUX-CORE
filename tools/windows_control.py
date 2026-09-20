@@ -117,23 +117,46 @@ def list_chrome_profiles() -> dict:
     }
 
 
+def _resolve_profile_selector(selector: str, profiles: list[dict]) -> str | None:
+    normalized = str(selector).strip().lower()
+    if not normalized:
+        return None
+
+    for profile in profiles:
+        candidates = {
+            str(profile.get("directory", "")).strip().lower(),
+            str(profile.get("name", "")).strip().lower(),
+            str(profile.get("email", "")).strip().lower(),
+        }
+        if normalized in candidates:
+            return profile.get("directory")
+
+    return None
+
+
 def set_default_chrome_profile(profile_directory: str) -> dict:
     """Remember which existing Chrome profile Clara should use by default."""
-    profile_directory = str(profile_directory).strip()
-    user_data = _chrome_user_data_dir()
-    target = user_data / profile_directory
+    profile_result = list_chrome_profiles()
+    if not profile_result.get("success"):
+        return profile_result
 
-    if not profile_directory or not target.is_dir():
+    selected = _resolve_profile_selector(
+        profile_directory,
+        profile_result.get("profiles", []),
+    )
+
+    if not selected:
         return {
             "success": False,
             "error": f"Chrome profile does not exist: {profile_directory}",
+            "profiles": profile_result.get("profiles", []),
         }
 
-    remember(DEFAULT_PROFILE_KEY, profile_directory)
+    remember(DEFAULT_PROFILE_KEY, selected)
 
     return {
         "success": True,
-        "profile_directory": profile_directory,
+        "profile_directory": selected,
     }
 
 
@@ -165,7 +188,12 @@ def open_chrome_url(
         for item in profiles
     }
 
-    selected = (profile_directory or "").strip() or profile_result.get("saved_default")
+    selector = (profile_directory or "").strip()
+    selected = (
+        _resolve_profile_selector(selector, profiles)
+        if selector
+        else profile_result.get("saved_default")
+    )
 
     if not selected:
         if len(profiles) == 1:
