@@ -45,6 +45,12 @@ VERSION = CORE_VERSION
 # Models
 CHAT_MODEL = _env("NENUX_MODEL", "qwen3:4b-instruct")
 MODEL = CHAT_MODEL
+
+# Multi-model tiers. They intentionally inherit the current main model by
+# default, so enabling the architecture does not require extra downloads.
+FAST_MODEL = _env("NENUX_FAST_MODEL", CHAT_MODEL)
+HEAVY_MODEL = _env("NENUX_HEAVY_MODEL", CHAT_MODEL)
+
 PLANNER_MODEL = _env("NENUX_PLANNER_MODEL", CHAT_MODEL)
 EVALUATOR_MODEL = _env("NENUX_EVALUATOR_MODEL", CHAT_MODEL)
 EMBED_MODEL = _env("NENUX_EMBED_MODEL", "nomic-embed-text")
