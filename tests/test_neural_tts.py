@@ -34,6 +34,30 @@ class TestSpeechSanitizer(unittest.TestCase):
             "Hey, I'm Clara. How are you?",
         )
 
+    def test_removes_markdown_bold_markers(self):
+        self.assertEqual(
+            sanitize_for_speech("The codename is **Atlas**."),
+            "The codename is Atlas.",
+        )
+
+    def test_removes_markdown_italic_markers(self):
+        self.assertEqual(
+            sanitize_for_speech("This is *important*."),
+            "This is important.",
+        )
+
+    def test_removes_inline_code_markers(self):
+        self.assertEqual(
+            sanitize_for_speech("Run `python clara.py` now."),
+            "Run python clara.py now.",
+        )
+
+    def test_removes_heading_marker(self):
+        self.assertEqual(
+            sanitize_for_speech("## Result\nAtlas"),
+            "Result\nAtlas",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
