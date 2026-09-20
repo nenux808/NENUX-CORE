@@ -255,6 +255,8 @@ def _enforce_tool_action_matching(
 
         if "media_control" in description:
             required_tool = "media_control"
+        elif "open_chrome_url" in description or "open the verified youtube video" in description:
+            required_tool = "open_chrome_url"
         elif "open_chrome" in description or "open google chrome" in description:
             required_tool = "open_chrome"
         elif "chrome_tab_control" in description:
@@ -269,8 +271,6 @@ def _enforce_tool_action_matching(
             required_tool = "set_default_chrome_profile"
         elif "list_chrome_profiles" in description or "list available local chrome profiles" in description:
             required_tool = "list_chrome_profiles"
-        elif "open_chrome_url" in description or "open the verified youtube video" in description:
-            required_tool = "open_chrome_url"
         elif "index_workspace_documents" in description or "index all supported workspace documents" in description:
             required_tool = "index_workspace_documents"
         elif "index_document" in description or "index the document" in description:
