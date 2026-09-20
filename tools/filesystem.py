@@ -21,6 +21,15 @@ def _safe_path(relative_path: str = ".") -> Path:
     if not candidate:
         candidate = "."
 
+    # The tool is already jailed inside WORKSPACE. Accept a redundant
+    # "workspace/" prefix as a harmless alias instead of treating it as
+    # a nested directory that usually does not exist.
+    lowered = candidate.lower()
+    if lowered == "workspace":
+        candidate = "."
+    elif lowered.startswith("workspace/"):
+        candidate = candidate[len("workspace/"):] or "."
+
     if candidate.startswith("/") or PureWindowsPath(candidate).is_absolute():
         raise PermissionError(
             "Access denied: absolute paths are not permitted."
