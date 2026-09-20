@@ -1329,7 +1329,11 @@ def process_user_request(
                 f"{prior_media}. Use the Chrome profile selected by the user: {user_input}"
             )
 
-    route = route_request(execution_input)
+    route = (
+        "agent_task"
+        if resolved_desktop_intent
+        else route_request(execution_input)
+    )
     lyrics_context = is_effective_lyrics_request(user_input, history)
     media_context = is_media_content_request(user_input) or lyrics_context
     browser_media_context = is_browser_media_request(execution_input)
