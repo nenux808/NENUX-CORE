@@ -1,7 +1,7 @@
 import json
 from ollama import chat
 
-from config import CHAT_MODEL
+from config import EVALUATOR_MODEL
 
 
 EVALUATOR_PROMPT = """
@@ -177,7 +177,7 @@ def evaluate_steps(
     }
 
     response = chat(
-        model=CHAT_MODEL,
+        model=EVALUATOR_MODEL,
         messages=[
             {
                 "role": "system",
