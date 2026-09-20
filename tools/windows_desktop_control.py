@@ -11,6 +11,7 @@ from tools.windows_control import (
     _find_chrome_executable,
     list_chrome_profiles,
     open_chrome_url,
+    set_default_chrome_profile,
 )
 
 
@@ -177,10 +178,30 @@ def open_chrome() -> dict:
 
 
 def open_gmail(profile_directory: str | None = None) -> dict:
-    """Open Gmail in the selected/default Chrome profile."""
+    """Open Gmail in Chrome, falling back to the first profile if needed."""
+    selected = (profile_directory or "").strip() or None
+
+    if selected is None:
+        profile_result = list_chrome_profiles()
+        if not profile_result.get("success"):
+            return profile_result
+
+        selected = profile_result.get("saved_default")
+
+        if not selected:
+            profiles = profile_result.get("profiles", [])
+            if not profiles:
+                return {
+                    "success": False,
+                    "error": "No Chrome profiles are available.",
+                }
+
+            selected = profiles[0]["directory"]
+            set_default_chrome_profile(selected)
+
     return open_chrome_url(
         "https://mail.google.com/",
-        profile_directory=profile_directory,
+        profile_directory=selected,
     )
 
 
