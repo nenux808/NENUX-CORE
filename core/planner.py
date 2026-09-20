@@ -24,6 +24,11 @@ NENUX currently has ONLY these tools:
 - list_chrome_profiles: list existing local Chrome profiles
 - set_default_chrome_profile: remember the Chrome profile to use by default
 - open_chrome_url: open a verified HTTP(S) URL in a selected Chrome profile
+- media_control: send approved media/volume keys
+- focus_chrome: bring a visible Chrome window to foreground
+- chrome_tab_control: next, previous, or close Chrome tab
+- open_gmail: open Gmail in the selected/default Chrome profile
+- open_vscode: launch Visual Studio Code
 
 RULES:
 
@@ -52,6 +57,10 @@ RULES:
 18. For media playback commands such as "play <song>" or "watch <video>", use web_search to find the most relevant official YouTube watch URL, then use open_chrome_url. Do not invent a YouTube URL.
 19. If open_chrome_url reports that multiple profiles exist and no default is saved, stop and ask the user which listed Chrome profile to use.
 20. If the user explicitly says to remember a chosen Chrome profile as default, use set_default_chrome_profile.
+21. For pause/resume/mute/volume/track controls, use media_control.
+22. For next/previous/close tab commands, use chrome_tab_control.
+23. For "open Gmail", use open_gmail. For "open VS Code", use open_vscode.
+24. Never use run_python or filesystem tools for simple desktop controls when a dedicated PC tool exists.
 
 Return ONLY valid JSON:
 
@@ -62,6 +71,48 @@ Return ONLY valid JSON:
   ]
 }
 """
+
+
+def _desktop_control_plan(goal: str) -> list[str] | None:
+    text = goal.lower().strip()
+
+    media_map = (
+        (("pause",), "Pause or resume current media using media_control"),
+        (("resume", "unpause"), "Pause or resume current media using media_control"),
+        (("mute", "unmute"), "Toggle system mute using media_control"),
+        (("volume up", "turn it up"), "Increase system volume using media_control"),
+        (("volume down", "turn it down"), "Decrease system volume using media_control"),
+        (("next track", "skip"), "Skip to next media track using media_control"),
+        (("previous track",), "Go to previous media track using media_control"),
+    )
+
+    for phrases, description in media_map:
+        if any(text.startswith(phrase) for phrase in phrases):
+            return [description]
+
+    if text.startswith("next tab"):
+        return ["Switch to the next Chrome tab using chrome_tab_control"]
+
+    if text.startswith("previous tab"):
+        return ["Switch to the previous Chrome tab using chrome_tab_control"]
+
+    if text.startswith("close tab") or text.startswith("close this tab"):
+        return ["Close the current Chrome tab using chrome_tab_control"]
+
+    if text.startswith("focus chrome") or text.startswith("open chrome"):
+        return ["Bring Chrome to the foreground using focus_chrome"]
+
+    if text.startswith("open gmail"):
+        return ["Open Gmail in Chrome using open_gmail"]
+
+    if (
+        text.startswith("open vscode")
+        or text.startswith("open vs code")
+        or text.startswith("open visual studio code")
+    ):
+        return ["Open Visual Studio Code using open_vscode"]
+
+    return None
 
 
 def _is_chrome_profile_default_goal(goal: str) -> bool:
@@ -124,6 +175,10 @@ def _is_local_document_goal(goal: str) -> bool:
 
 
 def create_plan(goal: str) -> list[str]:
+
+    desktop_plan = _desktop_control_plan(goal)
+    if desktop_plan:
+        return desktop_plan
 
     if _is_chrome_profile_default_goal(goal):
         return [
