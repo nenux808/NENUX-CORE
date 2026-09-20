@@ -64,6 +64,15 @@ Return ONLY valid JSON:
 """
 
 
+def _is_chrome_profile_default_goal(goal: str) -> bool:
+    text = goal.lower().strip()
+    return (
+        "profile" in text
+        and any(term in text for term in ("default", "primary"))
+        and any(term in text for term in ("set", "make", "use", "remember", "first", "second", "third"))
+    )
+
+
 def _is_chrome_profile_list_goal(goal: str) -> bool:
     text = goal.lower().strip()
     return (
@@ -115,6 +124,12 @@ def _is_local_document_goal(goal: str) -> bool:
 
 
 def create_plan(goal: str) -> list[str]:
+
+    if _is_chrome_profile_default_goal(goal):
+        return [
+            "List available local Chrome profiles using list_chrome_profiles",
+            "Set the selected Chrome profile as default using set_default_chrome_profile",
+        ]
 
     if _is_chrome_profile_list_goal(goal):
         return [
