@@ -15,6 +15,7 @@ SAFE_TOOLS = {
     "chrome_tab_control",
     "open_gmail",
     "open_vscode",
+    "youtube_media_control",
 }
 
 REVIEW_TOOLS = {
