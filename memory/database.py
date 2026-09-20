@@ -1,10 +1,9 @@
 import sqlite3
 import json
 from contextlib import contextmanager
-from pathlib import Path
 from datetime import datetime, UTC
 
-DB_PATH = Path(__file__).resolve().parent / "nenux_memory.db"
+from config import DB_PATH, HISTORY_MESSAGE_LIMIT
 
 
 @contextmanager
@@ -146,7 +145,7 @@ def save_message(role: str, content: str):
         )
 
 
-def get_recent_messages(limit: int = 12):
+def get_recent_messages(limit: int = HISTORY_MESSAGE_LIMIT):
     with get_connection() as conn:
         rows = conn.execute(
             """
