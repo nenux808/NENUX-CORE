@@ -31,6 +31,10 @@ from tools.registry import execute_tool
 from core.planner import create_plan
 from core.evaluator import evaluate_steps
 from core.media_resolver import select_best_youtube_result
+from core.model_router import (
+    format_model_decision,
+    select_model,
+)
 from core.desktop_intent import (
     desktop_intent_command,
     desktop_intent_reply,
@@ -405,9 +409,12 @@ SYSTEM_PROMPT = (
 )
 
 
-def call_model(messages: list) -> str:
+def call_model(
+    messages: list,
+    model_name: str | None = None,
+) -> str:
     response = chat(
-        model=CHAT_MODEL,
+        model=model_name or CHAT_MODEL,
         messages=messages
     )
 
@@ -527,6 +534,7 @@ def run_agent(
     source_fetch_required: bool = False,
     browser_media_required: bool = False,
     desktop_intent: str | None = None,
+    model_name: str | None = None,
 ):
     memory_context = build_memory_context()
 
@@ -671,7 +679,8 @@ Use tools again when current evidence is required.
     ):
 
         response = call_model(
-            messages
+            messages,
+            model_name=model_name,
         )
 
         tool_request = parse_tool_request(
@@ -1248,6 +1257,7 @@ def run_conversation(
     user_input: str,
     history: list,
     interface_name: str | None = None,
+    model_name: str | None = None,
 ) -> str:
     """Answer a non-action conversational request without tool planning."""
     messages = [
@@ -1285,7 +1295,10 @@ def run_conversation(
             "content": user_input,
         }
     )
-    return call_model(messages)
+    return call_model(
+        messages,
+        model_name=model_name,
+    )
 
 def process_user_request(
     user_input: str,
@@ -1341,11 +1354,19 @@ def process_user_request(
     if is_lyrics_context_followup(user_input, history):
         route = "retrieval"
 
+    model_decision = select_model(
+        execution_input,
+        route=route,
+        desktop_intent=resolved_desktop_intent,
+    )
+    print("\n" + format_model_decision(model_decision))
+
     if route == "conversation":
         reply = run_conversation(
             user_input,
             history,
             interface_name=interface_name,
+            model_name=model_decision.model,
         )
 
         save_message(
@@ -1413,6 +1434,7 @@ def process_user_request(
             ),
             browser_media_required=browser_media_context,
             desktop_intent=resolved_desktop_intent,
+            model_name=model_decision.model,
         )
 
         reply = enforce_lyrics_output_policy(
