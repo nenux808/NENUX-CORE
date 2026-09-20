@@ -8,12 +8,12 @@ SAFE_TOOLS = {
     "search_documents",
     "list_chrome_profiles",
     "set_default_chrome_profile",
+    "open_chrome_url",
 }
 
 REVIEW_TOOLS = {
     "write_file",
     "run_python",
-    "open_chrome_url",
 }
 
 BLOCKED_TOOLS = {
