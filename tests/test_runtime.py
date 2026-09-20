@@ -8,6 +8,7 @@ from core.policy import (
     is_history_query,
     requires_fresh_verification,
     memory_only_mode,
+    needs_code_target_clarification,
     should_store_task_memory,
 )
 
@@ -20,6 +21,8 @@ from config import (
     PLANNER_MODEL,
     EVALUATOR_MODEL,
     EMBED_MODEL,
+    MODEL_CONTEXT_TOKENS,
+    TOOL_RESULT_CONTEXT_CHARS,
 )
 from memory import database
 
@@ -103,6 +106,8 @@ class TestRuntimeSmoke(unittest.TestCase):
         self.assertTrue(PLANNER_MODEL)
         self.assertTrue(EVALUATOR_MODEL)
         self.assertTrue(EMBED_MODEL)
+        self.assertGreaterEqual(MODEL_CONTEXT_TOKENS, 8192)
+        self.assertGreater(TOOL_RESULT_CONTEXT_CHARS, 0)
 
 
 class TestDatabaseMemory(unittest.TestCase):
