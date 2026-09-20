@@ -1,12 +1,12 @@
 ﻿import json
 import math
 import hashlib
-from datetime import datetime
+from datetime import datetime, timezone
 
 from ollama import embed
 
 from memory.database import get_connection
-from config import EMBED_MODEL
+from config import EMBED_MODEL, SEMANTIC_MIN_SCORE, SEMANTIC_SEARCH_LIMIT
 
 
 def init_semantic_memory():
@@ -127,7 +127,7 @@ def add_semantic_memory(
                 kind,
                 content,
                 json.dumps(vector),
-                datetime.utcnow().isoformat()
+                datetime.now(timezone.utc).isoformat()
             )
         )
 
@@ -136,8 +136,8 @@ def add_semantic_memory(
 
 def search_semantic_memories(
     query: str,
-    limit: int = 5,
-    min_score: float = 0.25
+    limit: int = SEMANTIC_SEARCH_LIMIT,
+    min_score: float = SEMANTIC_MIN_SCORE
 ) -> list:
 
     query_vector = _get_embedding(
@@ -199,7 +199,7 @@ def search_semantic_memories(
 
 def build_semantic_context(
     query: str,
-    limit: int = 5
+    limit: int = SEMANTIC_SEARCH_LIMIT
 ) -> str:
 
     memories = search_semantic_memories(
