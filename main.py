@@ -236,6 +236,17 @@ Arguments:
 
 {}
 
+19. youtube_media_control
+
+Arguments:
+
+{
+    "action": "resume"
+}
+
+Allowed actions:
+pause, resume, play_pause
+
 Use web_search to discover public sources. Use web_fetch when a factual answer
 depends on details that should be verified from the actual page instead of a
 search snippet. web_fetch is read-only and restricted to public HTTP(S) pages.
@@ -276,6 +287,7 @@ For direct desktop commands, use the dedicated narrow tool immediately:
 - close all tabs in current Chrome window -> chrome_tab_control with close_all_tabs
 - open Gmail -> open_gmail
 - open VS Code -> open_vscode
+- pause/resume YouTube explicitly -> youtube_media_control
 
 Do not claim a desktop action happened unless the matching tool succeeded.
 Do not use run_python, write_file, or arbitrary command execution for these actions.
@@ -480,6 +492,7 @@ def parse_tool_request(response: str):
         "chrome_tab_control",
         "open_gmail",
         "open_vscode",
+        "youtube_media_control",
     }:
         return {
             "action": "tool",
@@ -1506,6 +1519,7 @@ def process_user_request(
             "open_chrome_url",
             "open_gmail",
             "open_vscode",
+            "youtube_media_control",
             "list_chrome_profiles",
             "set_default_chrome_profile",
         }
