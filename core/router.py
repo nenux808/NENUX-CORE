@@ -5,6 +5,10 @@ import re
 from ollama import chat
 
 from config import CHAT_MODEL
+from core.desktop_intent import (
+    interpret_desktop_intent,
+    should_try_desktop_intent,
+)
 
 
 ACTION_PATTERNS = (
@@ -86,5 +90,13 @@ def route_request(user_input: str) -> str:
 
     if _matches(RETRIEVAL_HINT_PATTERNS, text):
         return _model_route(user_input)
+
+    if should_try_desktop_intent(user_input):
+        desktop = interpret_desktop_intent(user_input)
+        if (
+            desktop.get("intent") != "none"
+            and float(desktop.get("confidence", 0.0)) >= 0.72
+        ):
+            return "agent_task"
 
     return "conversation"
