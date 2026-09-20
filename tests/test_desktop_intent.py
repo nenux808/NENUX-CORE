@@ -42,6 +42,16 @@ class TestDesktopIntent(unittest.TestCase):
             ["Close all tabs in the current Chrome window using chrome_tab_control"],
         )
 
+    def test_resume_youtube_uses_targeted_intent(self):
+        result = interpret_desktop_intent("resume youtube")
+
+        self.assertEqual(result["intent"], "youtube_resume")
+        self.assertEqual(result["confidence"], 1.0)
+
+        tool_call = desktop_intent_tool_call(result["intent"])
+        self.assertEqual(tool_call["tool"], "youtube_media_control")
+        self.assertEqual(tool_call["arguments"]["action"], "resume")
+
 
 if __name__ == "__main__":
     unittest.main()
