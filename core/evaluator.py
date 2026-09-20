@@ -253,7 +253,9 @@ def _enforce_tool_action_matching(
         description = str(step.get("description", "")).lower()
         required_tool = None
 
-        if "list_chrome_profiles" in description or "list available local chrome profiles" in description:
+        if "set_default_chrome_profile" in description or "set the selected chrome profile as default" in description:
+            required_tool = "set_default_chrome_profile"
+        elif "list_chrome_profiles" in description or "list available local chrome profiles" in description:
             required_tool = "list_chrome_profiles"
         elif "open_chrome_url" in description or "open the verified youtube video" in description:
             required_tool = "open_chrome_url"
