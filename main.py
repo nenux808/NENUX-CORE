@@ -188,7 +188,7 @@ Arguments:
 }
 
 Allowed actions:
-play_pause, pause, resume, next, previous, mute, volume_down, volume_up
+play_pause, pause, resume, next, previous, mute, unmute, volume_down, volume_up
 
 14. open_chrome
 
