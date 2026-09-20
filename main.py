@@ -33,10 +33,13 @@ from core.evaluator import evaluate_steps
 from core.policy import (
     document_indexing_requested,
     enforce_lyrics_output_policy,
+    is_browser_media_request,
+    is_chrome_profile_followup,
     is_effective_lyrics_request,
     is_lyrics_context_followup,
     is_media_content_request,
     memory_only_mode,
+    recent_browser_media_request,
     should_store_task_memory,
 )
 from core.router import route_request
@@ -144,6 +147,29 @@ Arguments:
     "limit": 5
 }
 
+10. list_chrome_profiles
+
+Arguments:
+
+{}
+
+11. set_default_chrome_profile
+
+Arguments:
+
+{
+    "profile_directory": "Default"
+}
+
+12. open_chrome_url
+
+Arguments:
+
+{
+    "url": "https://www.youtube.com/watch?v=...",
+    "profile_directory": "Default"
+}
+
 Use web_search to discover public sources. Use web_fetch when a factual answer
 depends on details that should be verified from the actual page instead of a
 search snippet. web_fetch is read-only and restricted to public HTTP(S) pages.
@@ -157,6 +183,16 @@ Do NOT call index_document or index_workspace_documents unless the user explicit
 For ordinary document questions, search the existing index directly.
 Treat retrieved chunks as evidence tied to their source_path. Do not invent file content
 that is absent from the retrieved chunks. If no relevant chunks are found, say so.
+
+PC / CHROME CONTROL
+
+Use list_chrome_profiles to inspect available local Chrome profiles.
+Use open_chrome_url only with a verified HTTP(S) URL. For media playback, first use
+web_search to find the most relevant official YouTube watch URL, then open it in Chrome.
+Never invent a YouTube watch URL. If open_chrome_url returns needs_profile_selection,
+ask the user which listed Chrome profile to use and stop. If the user later selects a profile,
+continue the original playback request using that profile.
+Use set_default_chrome_profile only when the user explicitly asks to remember a profile as default.
 
 Use web_search when the user asks for current, live, recent, online, news,
 weather, prices, scores, or other information that may have changed.
@@ -345,6 +381,9 @@ def parse_tool_request(response: str):
         "index_document",
         "index_workspace_documents",
         "search_documents",
+        "list_chrome_profiles",
+        "set_default_chrome_profile",
+        "open_chrome_url",
     }:
         return {
             "action": "tool",
@@ -401,6 +440,7 @@ def run_agent(
     history: list,
     retrieval_required: bool = False,
     source_fetch_required: bool = False,
+    browser_media_required: bool = False,
 ):
     memory_context = build_memory_context()
 
@@ -483,6 +523,8 @@ Use tools again when current evidence is required.
     forced_read_reminder = False
     forced_retrieval_reminder = False
     forced_fetch_reminder = False
+    forced_browser_search_reminder = False
+    forced_browser_open_reminder = False
 
     for step_number in range(
         max_steps
@@ -502,6 +544,46 @@ Use tools again when current evidence is required.
                 entry["tool"]
                 for entry in tool_trace
             }
+
+            if (
+                browser_media_required
+                and "web_search" not in used_tools
+                and not forced_browser_search_reminder
+            ):
+                forced_browser_search_reminder = True
+                messages.append({"role": "assistant", "content": response})
+                messages.append(
+                    {
+                        "role": "user",
+                        "content": (
+                            "RUNTIME MEDIA PLAYBACK VALIDATION FAILED: "
+                            "A playback request must first use web_search to find a real "
+                            "YouTube watch URL. Do not finalize yet."
+                        ),
+                    }
+                )
+                continue
+
+            if (
+                browser_media_required
+                and "web_search" in used_tools
+                and "open_chrome_url" not in used_tools
+                and not forced_browser_open_reminder
+            ):
+                forced_browser_open_reminder = True
+                messages.append({"role": "assistant", "content": response})
+                messages.append(
+                    {
+                        "role": "user",
+                        "content": (
+                            "RUNTIME MEDIA PLAYBACK VALIDATION FAILED: "
+                            "The requested media has not been opened yet. Use open_chrome_url "
+                            "with the verified YouTube URL. If a Chrome profile must be selected, "
+                            "use the tool result to ask the user which profile to use."
+                        ),
+                    }
+                )
+                continue
 
             if (
                 source_fetch_required
@@ -1039,9 +1121,18 @@ def process_user_request(
         user_input
     )
 
-    route = route_request(user_input)
+    execution_input = user_input
+    if is_chrome_profile_followup(user_input, history):
+        prior_media = recent_browser_media_request(history)
+        if prior_media:
+            execution_input = (
+                f"{prior_media}. Use the Chrome profile selected by the user: {user_input}"
+            )
+
+    route = route_request(execution_input)
     lyrics_context = is_effective_lyrics_request(user_input, history)
     media_context = is_media_content_request(user_input) or lyrics_context
+    browser_media_context = is_browser_media_request(execution_input)
 
     if is_lyrics_context_followup(user_input, history):
         route = "retrieval"
@@ -1090,7 +1181,7 @@ def process_user_request(
             task_id,
             step_records
         ) = create_tracked_task(
-            user_input
+            execution_input
         )
 
         for record in step_records:
@@ -1110,12 +1201,13 @@ def process_user_request(
 
     try:
         reply, tool_trace = run_agent(
-            user_input,
+            execution_input,
             history,
             retrieval_required=(route == "retrieval"),
             source_fetch_required=(
                 route == "retrieval" and media_context
             ),
+            browser_media_required=browser_media_context,
         )
 
         reply = enforce_lyrics_output_policy(
