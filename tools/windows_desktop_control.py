@@ -38,6 +38,7 @@ MEDIA_KEYS = {
     "next": VK_MEDIA_NEXT_TRACK,
     "previous": VK_MEDIA_PREV_TRACK,
     "mute": VK_VOLUME_MUTE,
+    "unmute": VK_VOLUME_MUTE,
     "volume_down": VK_VOLUME_DOWN,
     "volume_up": VK_VOLUME_UP,
 }
