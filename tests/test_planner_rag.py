@@ -31,6 +31,19 @@ class TestLocalDocumentPlanning(unittest.TestCase):
         )
         mock_chat.assert_not_called()
 
+    @patch("core.planner.chat")
+    def test_media_playback_skips_model_planner(self, mock_chat):
+        steps = create_plan("play Ocean Eyes by Billie Eilish")
+
+        self.assertEqual(
+            steps,
+            [
+                "Search the web for the most relevant official YouTube video for the requested media",
+                "Open the verified YouTube video in Chrome using open_chrome_url",
+            ],
+        )
+        mock_chat.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()
