@@ -23,6 +23,16 @@ def sanitize_for_speech(text: str) -> str:
         flags=re.IGNORECASE,
     )
 
+    # Markdown is useful on screen but formatting markers should not be spoken.
+    cleaned = re.sub(r"\*\*([^*]+)\*\*", r"\1", cleaned)
+    cleaned = re.sub(r"__([^_]+)__", r"\1", cleaned)
+    cleaned = re.sub(r"(?<!\*)\*([^*\n]+)\*(?!\*)", r"\1", cleaned)
+    cleaned = re.sub(r"(?<!_)_([^_\n]+)_(?!_)", r"\1", cleaned)
+    cleaned = re.sub(r"`([^`]+)`", r"\1", cleaned)
+    cleaned = re.sub(r"(?m)^\s{0,3}#{1,6}\s+", "", cleaned)
+    cleaned = re.sub(r"(?m)^\s*[-+*]\s+", "", cleaned)
+    cleaned = re.sub(r"(?m)^\s*>\s?", "", cleaned)
+
     # Raw URLs remain useful in terminal output, but should never reach TTS.
     cleaned = re.sub(
         r"https?://[^\s)\]}>]+",
