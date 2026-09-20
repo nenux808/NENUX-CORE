@@ -21,6 +21,7 @@ from tools.windows_desktop_control import (
     chrome_tab_control,
     focus_chrome,
     media_control,
+    open_chrome,
     open_gmail,
     open_vscode,
 )
@@ -43,6 +44,7 @@ TOOL_REGISTRY = {
     "open_chrome_url": open_chrome_url,
     "set_default_chrome_profile": set_default_chrome_profile,
     "media_control": media_control,
+    "open_chrome": open_chrome,
     "focus_chrome": focus_chrome,
     "chrome_tab_control": chrome_tab_control,
     "open_gmail": open_gmail,
