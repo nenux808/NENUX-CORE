@@ -10,6 +10,7 @@ from interface.neural_tts import KokoroTTS
 from interface.session import append_session_turn
 from interface.speech_to_text import FasterWhisperSTT
 from interface.wake_word import extract_wake_command
+from core.policy import needs_code_target_clarification
 from main import process_user_request
 from memory.database import init_database
 from memory.semantic_memory import init_semantic_memory
@@ -128,6 +129,30 @@ def main():
                     print(f"CLARA > {reply}")
                     tts.speak(reply)
                     break
+
+                if needs_code_target_clarification(
+                    command,
+                    session_history,
+                ):
+                    reply = (
+                        "Which code do you want me to debug? "
+                        "Give me the file name or paste the error/code first."
+                    )
+                    status = "completed"
+
+                    session_history = append_session_turn(
+                        session_history,
+                        command,
+                        reply,
+                    )
+
+                    print(f"\nCLARA > {reply}")
+                    print(f"[STATUS] {status.upper()}")
+                    print("[VOICE] Speaking response...")
+                    tts.speak(reply)
+                    last_activity_at = time.monotonic()
+                    print()
+                    continue
 
                 print("[CORE] Processing command...")
                 reply, status, _ = process_user_request(
