@@ -140,6 +140,8 @@ def chrome_tab_control(action: str) -> dict:
         _press_chord([VK_CONTROL, VK_SHIFT, VK_TAB])
     elif normalized == "close_tab":
         _press_chord([VK_CONTROL, VK_W])
+    elif normalized == "close_all_tabs":
+        _press_chord([VK_CONTROL, VK_SHIFT, VK_W])
     else:
         return {
             "success": False,
