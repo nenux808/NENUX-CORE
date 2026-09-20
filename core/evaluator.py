@@ -1,7 +1,11 @@
 import json
 from ollama import chat
 
-from config import EVALUATOR_MODEL
+from config import (
+    EVALUATOR_MODEL,
+    MODEL_CONTEXT_TOKENS,
+    TOOL_RESULT_CONTEXT_CHARS,
+)
 
 
 EVALUATOR_PROMPT = """
@@ -162,6 +166,36 @@ Allowed statuses:
 """
 
 
+def _compact_tool_trace(tool_trace: list) -> list:
+    """Keep evaluator evidence useful without embedding huge fetched pages."""
+    compact = []
+
+    for entry in tool_trace:
+        if not isinstance(entry, dict):
+            continue
+
+        copied = dict(entry)
+        result = copied.get("result")
+
+        if isinstance(result, dict):
+            serialized = json.dumps(result, ensure_ascii=False)
+            if len(serialized) > TOOL_RESULT_CONTEXT_CHARS:
+                copied["result"] = {
+                    "success": result.get("success"),
+                    "opened": result.get("opened"),
+                    "needs_profile_selection": result.get("needs_profile_selection"),
+                    "error": result.get("error"),
+                    "summary": (
+                        serialized[:TOOL_RESULT_CONTEXT_CHARS]
+                        + "... [truncated for evaluator context]"
+                    ),
+                }
+
+        compact.append(copied)
+
+    return compact
+
+
 def evaluate_steps(
     goal: str,
     planned_steps: list,
@@ -172,12 +206,13 @@ def evaluate_steps(
     payload = {
         "goal": goal,
         "planned_steps": planned_steps,
-        "tool_trace": tool_trace,
+        "tool_trace": _compact_tool_trace(tool_trace),
         "final_response": final_response
     }
 
     response = chat(
         model=EVALUATOR_MODEL,
+        options={"num_ctx": MODEL_CONTEXT_TOKENS},
         messages=[
             {
                 "role": "system",
