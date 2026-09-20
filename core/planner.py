@@ -2,7 +2,7 @@
 import json
 from ollama import chat
 
-from config import CHAT_MODEL
+from config import PLANNER_MODEL
 from core.desktop_intent import (
     desktop_intent_plan,
     interpret_desktop_intent,
@@ -255,7 +255,7 @@ def create_plan(goal: str) -> list[str]:
                 return semantic_plan
 
     response = chat(
-        model=CHAT_MODEL,
+        model=PLANNER_MODEL,
         messages=[
             {
                 "role": "system",
