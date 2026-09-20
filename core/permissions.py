@@ -3,6 +3,9 @@ SAFE_TOOLS = {
     "read_file",
     "web_search",
     "web_fetch",
+    "index_document",
+    "index_workspace_documents",
+    "search_documents",
 }
 
 REVIEW_TOOLS = {
