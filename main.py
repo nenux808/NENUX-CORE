@@ -204,7 +204,7 @@ Arguments:
 }
 
 Allowed actions:
-next_tab, previous_tab, close_tab
+next_tab, previous_tab, close_tab, close_all_tabs
 
 17. open_gmail
 
@@ -259,6 +259,7 @@ For direct desktop commands, use the dedicated narrow tool immediately:
 - open Chrome -> open_chrome
 - focus Chrome -> focus_chrome
 - next/previous/close Chrome tab -> chrome_tab_control
+- close all tabs in current Chrome window -> chrome_tab_control with close_all_tabs
 - open Gmail -> open_gmail
 - open VS Code -> open_vscode
 
