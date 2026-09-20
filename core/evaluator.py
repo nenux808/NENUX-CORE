@@ -288,7 +288,9 @@ def _enforce_tool_action_matching(
         description = str(step.get("description", "")).lower()
         required_tool = None
 
-        if "media_control" in description:
+        if "youtube_media_control" in description:
+            required_tool = "youtube_media_control"
+        elif "media_control" in description:
             required_tool = "media_control"
         elif "open_chrome_url" in description or "open the verified youtube video" in description:
             required_tool = "open_chrome_url"
