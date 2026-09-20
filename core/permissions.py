@@ -10,6 +10,7 @@ SAFE_TOOLS = {
     "set_default_chrome_profile",
     "open_chrome_url",
     "media_control",
+    "open_chrome",
     "focus_chrome",
     "chrome_tab_control",
     "open_gmail",
