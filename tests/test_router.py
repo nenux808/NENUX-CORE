@@ -66,6 +66,12 @@ class TestRequestRouter(unittest.TestCase):
             "agent_task",
         )
 
+    def test_list_chrome_profiles_routes_to_agent(self):
+        self.assertEqual(
+            route_request("list my Chrome profiles"),
+            "agent_task",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
