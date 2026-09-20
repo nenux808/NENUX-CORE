@@ -23,6 +23,7 @@ VK_CONTROL = 0x11
 VK_SHIFT = 0x10
 VK_TAB = 0x09
 VK_W = 0x57
+VK_K = 0x4B
 
 VK_MEDIA_NEXT_TRACK = 0xB0
 VK_MEDIA_PREV_TRACK = 0xB1
@@ -58,6 +59,83 @@ def _press_chord(keys: list[int]) -> None:
         user32.keybd_event(key, 0, KEYEVENTF_KEYUP, 0)
 
 
+def _visible_chrome_windows() -> list[tuple[int, str]]:
+    found: list[tuple[int, str]] = []
+    callback_type = ctypes.WINFUNCTYPE(
+        wintypes.BOOL,
+        wintypes.HWND,
+        wintypes.LPARAM,
+    )
+
+    @callback_type
+    def enum_callback(hwnd, _lparam):
+        if not user32.IsWindowVisible(hwnd):
+            return True
+
+        if _window_class(hwnd) != "Chrome_WidgetWin_1":
+            return True
+
+        length = user32.GetWindowTextLengthW(hwnd)
+        title_buffer = ctypes.create_unicode_buffer(length + 1)
+        user32.GetWindowTextW(hwnd, title_buffer, len(title_buffer))
+        found.append((hwnd, title_buffer.value))
+        return True
+
+    user32.EnumWindows(enum_callback, 0)
+    return found
+
+
+def _focus_window(hwnd: int) -> bool:
+    if user32.IsIconic(hwnd):
+        user32.ShowWindow(hwnd, 9)
+
+    return bool(user32.SetForegroundWindow(hwnd))
+
+
+def youtube_media_control(action: str) -> dict:
+    """Target a visible YouTube Chrome window with YouTube's K shortcut."""
+    normalized = str(action).strip().lower().replace(" ", "_")
+
+    if normalized not in {"pause", "resume", "play_pause"}:
+        return {
+            "success": False,
+            "error": "YouTube control currently supports pause/resume/play_pause only.",
+        }
+
+    windows = _visible_chrome_windows()
+    youtube_windows = [
+        (hwnd, title)
+        for hwnd, title in windows
+        if "youtube" in title.lower()
+    ]
+
+    if not youtube_windows:
+        return {
+            "success": False,
+            "error": "No visible YouTube Chrome window was found.",
+        }
+
+    hwnd, title = youtube_windows[0]
+    focused = _focus_window(hwnd)
+    if not focused:
+        return {
+            "success": False,
+            "error": "Found YouTube but could not bring its Chrome window to the foreground.",
+            "title": title,
+        }
+
+    _press_key(VK_K)
+
+    return {
+        "success": True,
+        "action": normalized,
+        "target": "youtube",
+        "focused_title": title,
+        "dispatched": True,
+        "verified_playback_state": False,
+    }
+
+
 def media_control(action: str) -> dict:
     """Send one approved Windows media/volume key."""
     normalized = str(action).strip().lower().replace(" ", "_")
@@ -88,24 +166,7 @@ def _window_class(hwnd: int) -> str:
 
 def focus_chrome() -> dict:
     """Bring a visible Chrome window to the foreground."""
-    found = []
-
-    callback_type = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
-
-    @callback_type
-    def enum_callback(hwnd, _lparam):
-        if not user32.IsWindowVisible(hwnd):
-            return True
-
-        if _window_class(hwnd) == "Chrome_WidgetWin_1":
-            length = user32.GetWindowTextLengthW(hwnd)
-            title_buffer = ctypes.create_unicode_buffer(length + 1)
-            user32.GetWindowTextW(hwnd, title_buffer, len(title_buffer))
-            found.append((hwnd, title_buffer.value))
-
-        return True
-
-    user32.EnumWindows(enum_callback, 0)
+    found = _visible_chrome_windows()
 
     if not found:
         return {
@@ -114,15 +175,12 @@ def focus_chrome() -> dict:
         }
 
     hwnd, title = found[0]
-
-    if user32.IsIconic(hwnd):
-        user32.ShowWindow(hwnd, 9)
-
-    user32.SetForegroundWindow(hwnd)
+    focused = _focus_window(hwnd)
 
     return {
-        "success": True,
+        "success": focused,
         "title": title,
+        **({} if focused else {"error": "Chrome was found but could not be focused."}),
     }
 
 
