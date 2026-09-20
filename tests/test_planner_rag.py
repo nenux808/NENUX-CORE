@@ -67,6 +67,46 @@ class TestLocalDocumentPlanning(unittest.TestCase):
         )
         mock_chat.assert_not_called()
 
+    @patch("core.planner.chat")
+    def test_pause_uses_media_control_plan(self, mock_chat):
+        self.assertEqual(
+            create_plan("pause it"),
+            ["Pause or resume current media using media_control"],
+        )
+        mock_chat.assert_not_called()
+
+    @patch("core.planner.chat")
+    def test_close_tab_uses_chrome_tab_control_plan(self, mock_chat):
+        self.assertEqual(
+            create_plan("close this tab"),
+            ["Close the current Chrome tab using chrome_tab_control"],
+        )
+        mock_chat.assert_not_called()
+
+    @patch("core.planner.chat")
+    def test_open_gmail_is_deterministic(self, mock_chat):
+        self.assertEqual(
+            create_plan("open Gmail"),
+            ["Open Gmail in Chrome using open_gmail"],
+        )
+        mock_chat.assert_not_called()
+
+    @patch("core.planner.chat")
+    def test_open_vscode_is_deterministic(self, mock_chat):
+        self.assertEqual(
+            create_plan("open VS Code"),
+            ["Open Visual Studio Code using open_vscode"],
+        )
+        mock_chat.assert_not_called()
+
+    @patch("core.planner.chat")
+    def test_open_chrome_is_deterministic(self, mock_chat):
+        self.assertEqual(
+            create_plan("open Chrome"),
+            ["Open Google Chrome using open_chrome"],
+        )
+        mock_chat.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()
