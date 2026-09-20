@@ -21,6 +21,9 @@ NENUX currently has ONLY these tools:
 - index_document: index one supported workspace text document
 - index_workspace_documents: index supported text documents under workspace
 - search_documents: retrieve relevant chunks from indexed workspace documents
+- list_chrome_profiles: list existing local Chrome profiles
+- set_default_chrome_profile: remember the Chrome profile to use by default
+- open_chrome_url: open a verified HTTP(S) URL in a selected Chrome profile
 
 RULES:
 
@@ -46,6 +49,9 @@ RULES:
 15. For questions about the contents of local workspace documents, prefer search_documents when the documents are already indexed.
 16. If indexing is explicitly requested, use index_document or index_workspace_documents before search_documents.
 17. Do not use web_search for a question that is specifically about the user's local workspace documents unless the user also asks for external verification.
+18. For media playback commands such as "play <song>" or "watch <video>", use web_search to find the most relevant official YouTube watch URL, then use open_chrome_url. Do not invent a YouTube URL.
+19. If open_chrome_url reports that multiple profiles exist and no default is saved, stop and ask the user which listed Chrome profile to use.
+20. If the user explicitly says to remember a chosen Chrome profile as default, use set_default_chrome_profile.
 
 Return ONLY valid JSON:
 
@@ -56,6 +62,11 @@ Return ONLY valid JSON:
   ]
 }
 """
+
+
+def _is_browser_media_goal(goal: str) -> bool:
+    text = goal.lower().strip()
+    return bool(re.match(r"^(play|watch|listen to)\b", text))
 
 
 def _is_workspace_index_goal(goal: str) -> bool:
@@ -95,6 +106,12 @@ def _is_local_document_goal(goal: str) -> bool:
 
 
 def create_plan(goal: str) -> list[str]:
+
+    if _is_browser_media_goal(goal):
+        return [
+            "Search the web for the most relevant official YouTube video for the requested media",
+            "Open the verified YouTube video in Chrome using open_chrome_url",
+        ]
 
     if _is_workspace_index_goal(goal):
         return [
