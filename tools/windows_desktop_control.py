@@ -7,7 +7,11 @@ import subprocess
 from ctypes import wintypes
 from pathlib import Path
 
-from tools.windows_control import open_chrome_url
+from tools.windows_control import (
+    _find_chrome_executable,
+    list_chrome_profiles,
+    open_chrome_url,
+)
 
 
 user32 = ctypes.WinDLL("user32", use_last_error=True)
@@ -144,6 +148,30 @@ def chrome_tab_control(action: str) -> dict:
         "success": True,
         "action": normalized,
         "focused_title": focus_result.get("title", ""),
+    }
+
+
+def open_chrome() -> dict:
+    """Launch Chrome using the saved profile when available."""
+    chrome = _find_chrome_executable()
+    profile_result = list_chrome_profiles()
+
+    if not profile_result.get("success"):
+        return profile_result
+
+    selected = profile_result.get("saved_default")
+    args = [str(chrome)]
+
+    if selected:
+        args.append(f"--profile-directory={selected}")
+
+    subprocess.Popen(args, close_fds=True)
+
+    return {
+        "success": True,
+        "opened": True,
+        "application": "Google Chrome",
+        "profile_directory": selected,
     }
 
 
