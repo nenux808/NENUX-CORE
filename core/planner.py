@@ -3,6 +3,11 @@ import json
 from ollama import chat
 
 from config import CHAT_MODEL
+from core.desktop_intent import (
+    desktop_intent_plan,
+    interpret_desktop_intent,
+    should_try_desktop_intent,
+)
 
 
 PLANNER_PROMPT = """
@@ -118,6 +123,14 @@ def _desktop_control_plan(goal: str) -> list[str] | None:
     if "previous tab" in text:
         return ["Switch to the previous Chrome tab using chrome_tab_control"]
 
+    if (
+        "close all tabs" in text
+        or "close all chrome tabs" in text
+        or "close every chrome tab" in text
+        or "shut all chrome tabs" in text
+    ):
+        return ["Close all tabs in the current Chrome window using chrome_tab_control"]
+
     if "close this tab" in text or "close tab" in text:
         return ["Close the current Chrome tab using chrome_tab_control"]
 
@@ -230,6 +243,16 @@ def create_plan(goal: str) -> list[str]:
         return [
             "Search the indexed workspace documents using search_documents and answer from the retrieved evidence"
         ]
+
+    if should_try_desktop_intent(goal):
+        desktop = interpret_desktop_intent(goal)
+        if (
+            desktop.get("intent") != "none"
+            and float(desktop.get("confidence", 0.0)) >= 0.72
+        ):
+            semantic_plan = desktop_intent_plan(desktop["intent"])
+            if semantic_plan:
+                return semantic_plan
 
     response = chat(
         model=CHAT_MODEL,
