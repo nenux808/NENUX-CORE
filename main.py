@@ -536,6 +536,15 @@ def run_agent(
     desktop_intent: str | None = None,
     model_name: str | None = None,
 ):
+    if model_name is None:
+        fallback_decision = select_model(
+            user_input,
+            route="agent_task",
+            desktop_intent=desktop_intent,
+        )
+        print("\n" + format_model_decision(fallback_decision))
+        model_name = fallback_decision.model
+
     memory_context = build_memory_context()
 
     semantic_context = build_semantic_context(
