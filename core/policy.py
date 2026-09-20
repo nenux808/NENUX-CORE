@@ -158,3 +158,24 @@ def enforce_lyrics_output_policy(
         )
 
     return response
+
+
+
+def document_indexing_requested(text: str) -> bool:
+    """Return True only when the user explicitly asks to index/reindex documents."""
+    normalized = re.sub(r"[^a-z0-9]+", " ", text.lower()).strip()
+    index_terms = ("index", "reindex", "re index")
+    document_terms = (
+        "workspace",
+        "document",
+        "documents",
+        "file",
+        "files",
+        "notes",
+        "report",
+        "reports",
+    )
+    return (
+        any(term in normalized for term in index_terms)
+        and any(term in normalized for term in document_terms)
+    )
