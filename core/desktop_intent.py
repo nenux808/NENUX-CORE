@@ -129,3 +129,57 @@ def desktop_intent_plan(intent: str) -> list[str] | None:
         "open_vscode": ["Open Visual Studio Code using open_vscode"],
     }
     return mapping.get(intent)
+
+
+
+def should_try_desktop_intent(text: str) -> bool:
+    """Cheap gate before invoking the model-based desktop interpreter."""
+    normalized = str(text).lower()
+    hints = (
+        "chrome",
+        "browser",
+        "tab",
+        "gmail",
+        "mail",
+        "vscode",
+        "vs code",
+        "visual studio code",
+        "pause",
+        "resume",
+        "video",
+        "mute",
+        "sound",
+        "volume",
+        "louder",
+        "quieter",
+        "track",
+        "music",
+        "close",
+        "open",
+        "shut",
+        "bring",
+    )
+    return any(hint in normalized for hint in hints)
+
+
+def desktop_intent_command(intent: str) -> str | None:
+    """Convert an approved semantic intent into an explicit executable command."""
+    mapping = {
+        "media_pause": "pause the current media",
+        "media_resume": "resume the current media",
+        "media_mute": "mute the system audio",
+        "media_unmute": "unmute the system audio",
+        "volume_up": "increase the system volume",
+        "volume_down": "decrease the system volume",
+        "next_track": "play the next media track",
+        "previous_track": "play the previous media track",
+        "next_tab": "switch to the next Chrome tab",
+        "previous_tab": "switch to the previous Chrome tab",
+        "close_tab": "close the current Chrome tab",
+        "close_all_tabs": "close all tabs in the current Chrome window",
+        "open_chrome": "open Chrome",
+        "focus_chrome": "focus Chrome",
+        "open_gmail": "open Gmail",
+        "open_vscode": "open VS Code",
+    }
+    return mapping.get(intent)
