@@ -935,6 +935,24 @@ Use tools again when current evidence is required.
         else:
             consecutive_failures += 1
 
+        if isinstance(result, dict) and result.get("needs_profile_selection"):
+            profiles = result.get("profiles", [])
+            labels = []
+            for index, profile in enumerate(profiles, start=1):
+                name = str(profile.get("name", "")).strip() or str(profile.get("directory", "")).strip()
+                email = str(profile.get("email", "")).strip()
+                if email:
+                    labels.append(f"{index}. {name} ({email})")
+                else:
+                    labels.append(f"{index}. {name}")
+
+            profile_text = "; ".join(labels) if labels else "the available Chrome profiles"
+
+            return (
+                "Which Chrome profile should I use? " + profile_text,
+                tool_trace,
+            )
+
         messages.append(
             {
                 "role": "assistant",
