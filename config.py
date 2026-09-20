@@ -44,7 +44,7 @@ VOICE_WAKE_ALIASES = (
     "hey claraa",
 )
 STT_INITIAL_PROMPT = ""
-STT_HOTWORDS = "Clara NENUX"
+STT_HOTWORDS = "Clara NENUX pause resume unpause mute unmute volume"
 VOICE_SESSION_FOLLOWUP_TIMEOUT_SECONDS = 15.0
 
 # Clara response style is kept separate from the Core reasoning/tool policy.
