@@ -65,6 +65,51 @@ class TestPolicy(unittest.TestCase):
         )
 
 
+    def test_ambiguous_debug_this_code_needs_clarification(self):
+        self.assertTrue(
+            needs_code_target_clarification(
+                "debug this code and investigate the root cause",
+                [],
+            )
+        )
+
+    def test_ambiguous_debug_survives_stt_root_cause_misrecognition(self):
+        self.assertTrue(
+            needs_code_target_clarification(
+                "debug this code and investigate the crude cause",
+                [],
+            )
+        )
+
+    def test_old_filename_history_does_not_resolve_this_code(self):
+        history = [
+            {"role": "user", "content": "Earlier I worked on broken_test.py"},
+            {"role": "assistant", "content": "Okay."},
+            {"role": "user", "content": "hello"},
+            {"role": "assistant", "content": "Hi."},
+        ]
+
+        self.assertTrue(
+            needs_code_target_clarification(
+                "debug this code and investigate the crude cause",
+                history,
+            )
+        )
+
+    def test_immediately_previous_filename_can_resolve_this_code(self):
+        history = [
+            {"role": "user", "content": "Please look at calculator.py"},
+            {"role": "assistant", "content": "Sure."},
+        ]
+
+        self.assertFalse(
+            needs_code_target_clarification(
+                "debug this code",
+                history,
+            )
+        )
+
+
 class TestWorkspaceSecurity(unittest.TestCase):
 
     def test_workspace_path_allowed(self):
