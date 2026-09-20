@@ -179,3 +179,40 @@ def document_indexing_requested(text: str) -> bool:
         any(term in normalized for term in index_terms)
         and any(term in normalized for term in document_terms)
     )
+
+
+
+def is_browser_media_request(text: str) -> bool:
+    """Detect direct browser media playback/watch requests."""
+    normalized = text.lower().strip()
+    return bool(re.match(r"^(play|watch|listen to)\b", normalized))
+
+
+def recent_browser_media_request(history: list[dict]) -> str | None:
+    """Return the most recent user playback request from session history."""
+    for item in reversed(history or []):
+        if item.get("role") != "user":
+            continue
+        content = str(item.get("content", "")).strip()
+        if is_browser_media_request(content):
+            return content
+    return None
+
+
+def is_chrome_profile_followup(text: str, history: list[dict]) -> bool:
+    """Detect a short response to Clara asking which Chrome profile to use."""
+    normalized = re.sub(r"[^a-z0-9@._ -]+", " ", text.lower()).strip()
+    if not normalized or len(normalized.split()) > 8:
+        return False
+
+    recent_assistant = " ".join(
+        str(item.get("content", ""))
+        for item in (history or [])[-4:]
+        if item.get("role") == "assistant"
+    ).lower()
+
+    return (
+        "chrome profile" in recent_assistant
+        or "which profile" in recent_assistant
+        or "profile should i use" in recent_assistant
+    ) and recent_browser_media_request(history) is not None
