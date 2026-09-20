@@ -253,7 +253,13 @@ def _enforce_tool_action_matching(
         description = str(step.get("description", "")).lower()
         required_tool = None
 
-        if "web_fetch" in description or "fetch " in description or "fetch the" in description:
+        if "index_workspace_documents" in description or "index all supported workspace documents" in description:
+            required_tool = "index_workspace_documents"
+        elif "index_document" in description or "index the document" in description:
+            required_tool = "index_document"
+        elif "search_documents" in description or "search the indexed workspace documents" in description:
+            required_tool = "search_documents"
+        elif "web_fetch" in description or "fetch " in description or "fetch the" in description:
             required_tool = "web_fetch"
         elif "web_search" in description or "search the web" in description:
             required_tool = "web_search"
