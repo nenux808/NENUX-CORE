@@ -8,7 +8,8 @@ from config import CHAT_MODEL
 
 
 ACTION_PATTERNS = (
-    r"^\s*(pause|resume|unpause|mute|unmute|volume up|volume down|turn it up|turn it down|next track|previous track|skip)\b",
+    r"\b(pause|resume|unpause|mute|unmute|volume up|volume down|turn it up|turn it down|next track|previous track|skip)\b",
+    r"\b(play it|play the video|video play|resume the video)\b",
     r"^\s*(next tab|previous tab|close (this )?tab|focus chrome|open chrome|open gmail|open vs ?code|open visual studio code)\b",
     r"^\s*(play|watch|listen to)\b",
     r"\b(list|show|check|which|what)\b.*\bchrome profiles?\b",
