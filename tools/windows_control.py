@@ -122,6 +122,30 @@ def _resolve_profile_selector(selector: str, profiles: list[dict]) -> str | None
     if not normalized:
         return None
 
+    ordinal_map = {
+        "first": 0,
+        "1st": 0,
+        "one": 0,
+        "second": 1,
+        "2nd": 1,
+        "two": 1,
+        "third": 2,
+        "3rd": 2,
+        "three": 2,
+        "fourth": 3,
+        "4th": 3,
+        "fifth": 4,
+        "5th": 4,
+        "sixth": 5,
+        "6th": 5,
+    }
+
+    if normalized in ordinal_map:
+        index = ordinal_map[normalized]
+        if index < len(profiles):
+            return profiles[index].get("directory")
+        return None
+
     for profile in profiles:
         candidates = {
             str(profile.get("directory", "")).strip().lower(),
