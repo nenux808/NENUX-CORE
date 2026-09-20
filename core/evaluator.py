@@ -255,6 +255,8 @@ def _enforce_tool_action_matching(
 
         if "media_control" in description:
             required_tool = "media_control"
+        elif "open_chrome" in description or "open google chrome" in description:
+            required_tool = "open_chrome"
         elif "chrome_tab_control" in description:
             required_tool = "chrome_tab_control"
         elif "focus_chrome" in description:
