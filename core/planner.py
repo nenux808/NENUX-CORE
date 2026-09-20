@@ -1,4 +1,5 @@
-﻿import json
+﻿import re
+import json
 from ollama import chat
 
 from config import CHAT_MODEL
@@ -57,7 +58,53 @@ Return ONLY valid JSON:
 """
 
 
+def _is_workspace_index_goal(goal: str) -> bool:
+    text = goal.lower().strip()
+    return (
+        "index" in text
+        and "workspace" in text
+        and any(term in text for term in ("document", "documents", "file", "files"))
+    )
+
+
+def _is_local_document_goal(goal: str) -> bool:
+    text = goal.lower().strip()
+
+    if any(term in text for term in ("web", "online", "internet")):
+        return False
+
+    local_terms = ("document", "documents", "file", "files", "report", "reports", "notes", "workspace")
+    question_terms = (
+        "what does",
+        "what do",
+        "what is in",
+        "what's in",
+        "find in",
+        "search in",
+        "according to",
+        "does my",
+        "say about",
+        "mention",
+        "contain",
+    )
+
+    return (
+        any(term in text for term in local_terms)
+        and any(term in text for term in question_terms)
+    )
+
+
 def create_plan(goal: str) -> list[str]:
+
+    if _is_workspace_index_goal(goal):
+        return [
+            "Index all supported workspace documents using index_workspace_documents"
+        ]
+
+    if _is_local_document_goal(goal):
+        return [
+            "Search the indexed workspace documents using search_documents and answer from the retrieved evidence"
+        ]
 
     response = chat(
         model=CHAT_MODEL,
