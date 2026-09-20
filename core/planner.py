@@ -17,6 +17,9 @@ NENUX currently has ONLY these tools:
 - run_python: execute a Python file
 - web_search: retrieve current/public information from the web
 - web_fetch: fetch readable text from a public web page for verification
+- index_document: index one supported workspace text document
+- index_workspace_documents: index supported text documents under workspace
+- search_documents: retrieve relevant chunks from indexed workspace documents
 
 RULES:
 
@@ -39,6 +42,9 @@ RULES:
 12. For public web/media questions, never invent local file steps such as "read the file containing..." unless the user explicitly named a local file.
 13. If verification from the actual source page is useful, plan web_search followed by web_fetch, not read_file.
 14. For lyric requests, do not plan to reproduce full lyrics. Plan to verify the song/title/artist and provide only a brief summary or a very short verified excerpt if allowed by runtime policy.
+15. For questions about the contents of local workspace documents, prefer search_documents when the documents are already indexed.
+16. If indexing is explicitly requested, use index_document or index_workspace_documents before search_documents.
+17. Do not use web_search for a question that is specifically about the user's local workspace documents unless the user also asks for external verification.
 
 Return ONLY valid JSON:
 
