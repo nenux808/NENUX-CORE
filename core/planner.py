@@ -2,7 +2,7 @@
 import json
 from ollama import chat
 
-from config import PLANNER_MODEL
+from config import PLANNER_MODEL, MODEL_CONTEXT_TOKENS
 from core.desktop_intent import (
     desktop_intent_plan,
     interpret_desktop_intent,
@@ -256,6 +256,7 @@ def create_plan(goal: str) -> list[str]:
 
     response = chat(
         model=PLANNER_MODEL,
+        options={"num_ctx": MODEL_CONTEXT_TOKENS},
         messages=[
             {
                 "role": "system",
