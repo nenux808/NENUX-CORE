@@ -295,18 +295,20 @@ def needs_code_target_clarification(
     if any(marker in padded for marker in explicit_target_markers):
         return False
 
-    recent_user = " ".join(
-        str(item.get("content", ""))
-        for item in (history or [])[-4:]
-        if item.get("role") == "user"
-    )
+    previous_user = ""
+    for item in reversed(history or []):
+        if item.get("role") == "user":
+            previous_user = str(item.get("content", ""))
+            break
 
+    # "This code" may inherit only the immediately preceding user-provided
+    # code/file/error target. Older history is context, not a pointing target.
     if (
-        "```" in recent_user
-        or "traceback" in recent_user.lower()
+        "```" in previous_user
+        or "traceback" in previous_user.lower()
         or re.search(
             r"\b\w+\.(py|js|ts|tsx|jsx|java|cpp|c|cs|go|rs|php|rb)\b",
-            recent_user.lower(),
+            previous_user.lower(),
         )
     ):
         return False
