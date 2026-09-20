@@ -94,7 +94,10 @@ def _desktop_control_plan(goal: str) -> list[str] | None:
     ):
         return ["Pause or resume current media using media_control"]
 
-    if "unmute" in text or "mute" in text:
+    if "unmute" in text:
+        return ["Toggle system mute using media_control"]
+
+    if re.search(r"\bmute\b", text):
         return ["Toggle system mute using media_control"]
 
     if "volume up" in text or "turn it up" in text:
