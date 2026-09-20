@@ -6,11 +6,14 @@ SAFE_TOOLS = {
     "index_document",
     "index_workspace_documents",
     "search_documents",
+    "list_chrome_profiles",
+    "set_default_chrome_profile",
 }
 
 REVIEW_TOOLS = {
     "write_file",
     "run_python",
+    "open_chrome_url",
 }
 
 BLOCKED_TOOLS = {
