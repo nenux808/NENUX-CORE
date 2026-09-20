@@ -7,6 +7,11 @@ from tools.filesystem import (
 from tools.python_tool import run_python
 from tools.web_search import web_search
 from tools.web_fetch import web_fetch
+from memory.document_index import (
+    index_document,
+    index_workspace_documents,
+    search_documents,
+)
 
 from core.permissions import request_permission
 from memory.database import log_action
@@ -19,6 +24,9 @@ TOOL_REGISTRY = {
     "run_python": run_python,
     "web_search": web_search,
     "web_fetch": web_fetch,
+    "index_document": index_document,
+    "index_workspace_documents": index_workspace_documents,
+    "search_documents": search_documents,
 }
 
 
