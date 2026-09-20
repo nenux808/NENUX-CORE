@@ -12,7 +12,8 @@ ACTION_PATTERNS = (
     r"\b(search|look up|find online|on the web|internet)\b",
     r"\b(run|execute|test|verify|debug|fix|repair)\b",
     r"\b(read|open|inspect|list|write|create|modify|edit|delete)\b.*\b(file|folder|script|code|program|workspace)\b",
-    r"\b(file|folder|script|code|program|workspace)\b.*\b(read|open|inspect|list|write|create|modify|edit|delete)\b",
+    r"\b(file|folder|script|code|program|workspace|document|notes|report)\b.*\b(read|open|inspect|list|write|create|modify|edit|delete|say|mention|contain|about)\b",
+    r"\b(what does|what do|find in|search in|according to)\b.*\b(file|document|notes|report|workspace)\b",
 )
 
 MEMORY_PATTERNS = (
