@@ -11,6 +11,8 @@ ACTION_PATTERNS = (
     r"^\s*(play|watch|listen to)\b",
     r"\b(list|show|check|which|what)\b.*\bchrome profiles?\b",
     r"\bchrome profiles?\b.*\b(list|show|check|available|have|use|default)\b",
+    r"\b(set|make|use|remember)\b.*\b(profile|chrome profile)\b.*\b(default|primary)\b",
+    r"\b(first|second|third|default|profile \d+)\b.*\bprofile\b.*\b(default|primary)\b",
     r"\b(latest|current|currently|today|tonight|right now|live|news|weather|forecast|price|score)\b",
     r"\b(search|look up|find online|on the web|internet)\b",
     r"\b(run|execute|test|verify|debug|fix|repair)\b",
