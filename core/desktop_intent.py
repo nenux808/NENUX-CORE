@@ -183,3 +183,27 @@ def desktop_intent_command(intent: str) -> str | None:
         "open_vscode": "open VS Code",
     }
     return mapping.get(intent)
+
+
+
+def desktop_intent_tool_call(intent: str) -> dict | None:
+    """Map one approved semantic intent to one whitelisted tool call."""
+    mapping = {
+        "media_pause": {"tool": "media_control", "arguments": {"action": "pause"}},
+        "media_resume": {"tool": "media_control", "arguments": {"action": "resume"}},
+        "media_mute": {"tool": "media_control", "arguments": {"action": "mute"}},
+        "media_unmute": {"tool": "media_control", "arguments": {"action": "unmute"}},
+        "volume_up": {"tool": "media_control", "arguments": {"action": "volume_up"}},
+        "volume_down": {"tool": "media_control", "arguments": {"action": "volume_down"}},
+        "next_track": {"tool": "media_control", "arguments": {"action": "next"}},
+        "previous_track": {"tool": "media_control", "arguments": {"action": "previous"}},
+        "next_tab": {"tool": "chrome_tab_control", "arguments": {"action": "next_tab"}},
+        "previous_tab": {"tool": "chrome_tab_control", "arguments": {"action": "previous_tab"}},
+        "close_tab": {"tool": "chrome_tab_control", "arguments": {"action": "close_tab"}},
+        "close_all_tabs": {"tool": "chrome_tab_control", "arguments": {"action": "close_all_tabs"}},
+        "open_chrome": {"tool": "open_chrome", "arguments": {}},
+        "focus_chrome": {"tool": "focus_chrome", "arguments": {}},
+        "open_gmail": {"tool": "open_gmail", "arguments": {}},
+        "open_vscode": {"tool": "open_vscode", "arguments": {}},
+    }
+    return mapping.get(intent)
