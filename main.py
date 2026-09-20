@@ -32,6 +32,7 @@ from core.planner import create_plan
 from core.evaluator import evaluate_steps
 from core.policy import (
     enforce_lyrics_output_policy,
+    is_effective_lyrics_request,
     is_lyrics_context_followup,
     is_media_content_request,
     memory_only_mode,
@@ -980,6 +981,8 @@ def process_user_request(
     )
 
     route = route_request(user_input)
+    lyrics_context = is_effective_lyrics_request(user_input, history)
+    media_context = is_media_content_request(user_input) or lyrics_context
 
     if is_lyrics_context_followup(user_input, history):
         route = "retrieval"
@@ -1052,11 +1055,15 @@ def process_user_request(
             history,
             retrieval_required=(route == "retrieval"),
             source_fetch_required=(
-                route == "retrieval" and is_media_content_request(user_input)
+                route == "retrieval" and media_context
             ),
         )
 
-        reply = enforce_lyrics_output_policy(user_input, reply)
+        reply = enforce_lyrics_output_policy(
+            user_input,
+            reply,
+            history=history,
+        )
 
         task_status = evaluate_task(
             goal=original_goal,
