@@ -4,7 +4,7 @@ import json
 
 from ollama import chat
 
-from config import FAST_MODEL
+from config import FAST_MODEL, MODEL_CONTEXT_TOKENS
 
 
 DESKTOP_INTENTS = {
@@ -75,6 +75,7 @@ def interpret_desktop_intent(text: str) -> dict:
     """Map free-form language to one whitelisted desktop intent."""
     response = chat(
         model=FAST_MODEL,
+        options={"num_ctx": MODEL_CONTEXT_TOKENS},
         messages=[
             {"role": "system", "content": INTENT_PROMPT},
             {"role": "user", "content": str(text)},
