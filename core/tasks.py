@@ -1,9 +1,14 @@
-﻿from datetime import datetime
+﻿from datetime import datetime, timezone
 from memory.database import get_connection
 
 
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+
 def create_task(goal: str) -> int:
-    now = datetime.utcnow().isoformat()
+    now = _now()
 
     with get_connection() as conn:
         cursor = conn.execute(
@@ -29,7 +34,7 @@ def add_step(task_id: int, description: str) -> int:
             (
                 task_id,
                 description,
-                datetime.utcnow().isoformat()
+                _now()
             )
         )
 
@@ -111,7 +116,7 @@ def set_task_status(task_id: int, status: str):
             """,
             (
                 status,
-                datetime.utcnow().isoformat(),
+                _now(),
                 task_id
             )
         )
