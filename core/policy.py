@@ -127,9 +127,21 @@ def _quoted_spans(text: str) -> list[str]:
     return re.findall(r'["“](.+?)["”]', text, flags=re.DOTALL)
 
 
-def enforce_lyrics_output_policy(user_input: str, response: str) -> str:
+def is_effective_lyrics_request(user_input: str, history: list[dict] | None = None) -> bool:
+    """Treat short follow-ups as lyric requests when recent session context is lyrics."""
+    return (
+        is_lyrics_request(user_input)
+        or bool(history) and is_lyrics_context_followup(user_input, history)
+    )
+
+
+def enforce_lyrics_output_policy(
+    user_input: str,
+    response: str,
+    history: list[dict] | None = None,
+) -> str:
     """Prevent long generated lyric reproduction while preserving useful help."""
-    if not is_lyrics_request(user_input):
+    if not is_effective_lyrics_request(user_input, history):
         return response
 
     quoted = _quoted_spans(response)
