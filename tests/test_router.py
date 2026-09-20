@@ -78,6 +78,21 @@ class TestRequestRouter(unittest.TestCase):
             "agent_task",
         )
 
+    def test_pause_routes_to_agent(self):
+        self.assertEqual(route_request("pause it"), "agent_task")
+
+    def test_volume_up_routes_to_agent(self):
+        self.assertEqual(route_request("volume up"), "agent_task")
+
+    def test_close_tab_routes_to_agent(self):
+        self.assertEqual(route_request("close this tab"), "agent_task")
+
+    def test_open_gmail_routes_to_agent(self):
+        self.assertEqual(route_request("open Gmail"), "agent_task")
+
+    def test_open_vscode_routes_to_agent(self):
+        self.assertEqual(route_request("open VS Code"), "agent_task")
+
 
 if __name__ == "__main__":
     unittest.main()
