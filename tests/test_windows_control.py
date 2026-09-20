@@ -8,6 +8,20 @@ from tools.windows_control import (
 
 
 class TestWindowsChromeControl(unittest.TestCase):
+    def test_profile_selector_accepts_ordinal(self):
+        profiles = [
+            {"directory": "Default", "name": "A", "email": ""},
+            {"directory": "Profile 1", "name": "B", "email": ""},
+        ]
+        self.assertEqual(
+            _resolve_profile_selector("first", profiles),
+            "Default",
+        )
+        self.assertEqual(
+            _resolve_profile_selector("second", profiles),
+            "Profile 1",
+        )
+
     def test_profile_selector_accepts_visible_name(self):
         profiles = [
             {
