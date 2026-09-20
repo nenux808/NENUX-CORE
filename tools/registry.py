@@ -12,6 +12,11 @@ from memory.document_index import (
     index_workspace_documents,
     search_documents,
 )
+from tools.windows_control import (
+    list_chrome_profiles,
+    open_chrome_url,
+    set_default_chrome_profile,
+)
 
 from core.permissions import request_permission
 from memory.database import log_action
@@ -27,6 +32,9 @@ TOOL_REGISTRY = {
     "index_document": index_document,
     "index_workspace_documents": index_workspace_documents,
     "search_documents": search_documents,
+    "list_chrome_profiles": list_chrome_profiles,
+    "open_chrome_url": open_chrome_url,
+    "set_default_chrome_profile": set_default_chrome_profile,
 }
 
 
