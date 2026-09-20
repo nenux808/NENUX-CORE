@@ -1335,7 +1335,7 @@ def process_user_request(
             task_status
         )
 
-        document_tools_used = {
+        non_memory_tools_used = {
             entry.get("tool")
             for entry in tool_trace
             if isinstance(entry, dict)
@@ -1343,12 +1343,21 @@ def process_user_request(
             "index_document",
             "index_workspace_documents",
             "search_documents",
+            "media_control",
+            "open_chrome",
+            "focus_chrome",
+            "chrome_tab_control",
+            "open_chrome_url",
+            "open_gmail",
+            "open_vscode",
+            "list_chrome_profiles",
+            "set_default_chrome_profile",
         }
 
         if (
             task_status == "completed"
             and route != "retrieval"
-            and not document_tools_used
+            and not non_memory_tools_used
             and should_store_task_memory(original_goal)
         ):
             memory_record = (
@@ -1528,7 +1537,7 @@ def main():
                 task_status
             )
 
-            document_tools_used = {
+            non_memory_tools_used = {
                 entry.get("tool")
                 for entry in tool_trace
                 if isinstance(entry, dict)
@@ -1536,11 +1545,20 @@ def main():
                 "index_document",
                 "index_workspace_documents",
                 "search_documents",
+                "media_control",
+                "open_chrome",
+                "focus_chrome",
+                "chrome_tab_control",
+                "open_chrome_url",
+                "open_gmail",
+                "open_vscode",
+                "list_chrome_profiles",
+                "set_default_chrome_profile",
             }
 
             if (
                 task_status == "completed"
-                and not document_tools_used
+                and not non_memory_tools_used
                 and should_store_task_memory(original_goal)
             ):
 
