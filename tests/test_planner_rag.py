@@ -44,6 +44,16 @@ class TestLocalDocumentPlanning(unittest.TestCase):
         )
         mock_chat.assert_not_called()
 
+    @patch("core.planner.chat")
+    def test_chrome_profile_listing_skips_model_planner(self, mock_chat):
+        steps = create_plan("list my Chrome profiles")
+
+        self.assertEqual(
+            steps,
+            ["List available local Chrome profiles using list_chrome_profiles"],
+        )
+        mock_chat.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()
