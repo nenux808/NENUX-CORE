@@ -249,3 +249,66 @@ def is_browser_media_correction_followup(text: str, history: list[dict]) -> bool
         return True
 
     return False
+
+
+
+def needs_code_target_clarification(
+    text: str,
+    history: list[dict] | None = None,
+) -> bool:
+    """Ask which code/file is meant instead of inventing a debugging target."""
+    normalized = re.sub(r"\s+", " ", str(text).lower()).strip()
+
+    deictic_debug_phrases = (
+        "debug this code",
+        "fix this code",
+        "repair this code",
+        "review this code",
+        "investigate this code",
+        "find the root cause in this code",
+    )
+
+    if not any(phrase in normalized for phrase in deictic_debug_phrases):
+        return False
+
+    explicit_target_markers = (
+        ".py",
+        ".js",
+        ".ts",
+        ".tsx",
+        ".jsx",
+        ".java",
+        ".cpp",
+        ".c",
+        ".cs",
+        ".go",
+        ".rs",
+        ".php",
+        ".rb",
+        " file ",
+        " workspace ",
+        "traceback",
+        "error:",
+    )
+
+    padded = f" {normalized} "
+    if any(marker in padded for marker in explicit_target_markers):
+        return False
+
+    recent_user = " ".join(
+        str(item.get("content", ""))
+        for item in (history or [])[-4:]
+        if item.get("role") == "user"
+    )
+
+    if (
+        "```" in recent_user
+        or "traceback" in recent_user.lower()
+        or re.search(
+            r"\b\w+\.(py|js|ts|tsx|jsx|java|cpp|c|cs|go|rs|php|rb)\b",
+            recent_user.lower(),
+        )
+    ):
+        return False
+
+    return True
