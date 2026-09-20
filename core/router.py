@@ -4,7 +4,7 @@ import re
 
 from ollama import chat
 
-from config import CHAT_MODEL
+from config import FAST_MODEL
 from core.desktop_intent import (
     interpret_desktop_intent,
     should_try_desktop_intent,
@@ -52,7 +52,7 @@ def _matches(patterns: tuple[str, ...], text: str) -> bool:
 def _model_route(user_input: str) -> str:
     """Classify ambiguous knowledge requests without executing any tool."""
     response = chat(
-        model=CHAT_MODEL,
+        model=FAST_MODEL,
         messages=[
             {
                 "role": "system",
