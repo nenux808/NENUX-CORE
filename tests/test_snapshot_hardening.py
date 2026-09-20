@@ -3,7 +3,7 @@ import unittest
 
 import config
 from core import evaluator, planner
-from tools.filesystem import _safe_path, write_file
+from tools.filesystem import _safe_path, read_file, write_file
 from tools.python_tool import run_python
 
 
@@ -58,6 +58,16 @@ class TestMergedSnapshotHardening(unittest.TestCase):
     def test_planner_and_evaluator_have_independent_model_config(self):
         self.assertEqual(planner.PLANNER_MODEL, config.PLANNER_MODEL)
         self.assertEqual(evaluator.EVALUATOR_MODEL, config.EVALUATOR_MODEL)
+
+    def test_workspace_prefix_alias_resolves_inside_jail(self):
+        write_file("alias_probe.txt", "ok")
+
+        prefixed = read_file("workspace/alias_probe.txt")
+        root_alias = _safe_path("workspace")
+
+        self.assertTrue(prefixed["success"])
+        self.assertEqual(prefixed["content"], "ok")
+        self.assertEqual(root_alias, config.WORKSPACE)
 
 
 if __name__ == "__main__":
