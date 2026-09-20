@@ -54,6 +54,12 @@ class TestRequestRouter(unittest.TestCase):
             "agent_task",
         )
 
+    def test_index_workspace_documents_routes_to_agent(self):
+        self.assertEqual(
+            route_request("index my workspace documents"),
+            "agent_task",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
