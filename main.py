@@ -172,6 +172,50 @@ Arguments:
     "profile_directory": "Default"
 }
 
+13. media_control
+
+Arguments:
+
+{
+    "action": "pause"
+}
+
+Allowed actions:
+play_pause, pause, resume, next, previous, mute, volume_down, volume_up
+
+14. focus_chrome
+
+Arguments:
+
+{}
+
+15. chrome_tab_control
+
+Arguments:
+
+{
+    "action": "next_tab"
+}
+
+Allowed actions:
+next_tab, previous_tab, close_tab
+
+16. open_gmail
+
+Arguments:
+
+{
+    "profile_directory": "Default"
+}
+
+profile_directory is optional.
+
+17. open_vscode
+
+Arguments:
+
+{}
+
 Use web_search to discover public sources. Use web_fetch when a factual answer
 depends on details that should be verified from the actual page instead of a
 search snippet. web_fetch is read-only and restricted to public HTTP(S) pages.
@@ -200,6 +244,19 @@ If open_chrome_url returns needs_profile_selection,
 ask the user which listed Chrome profile to use and stop. If the user later selects a profile,
 continue the original playback request using that profile.
 Use set_default_chrome_profile only when the user explicitly asks to remember a profile as default.
+
+DESKTOP CONTROL
+
+For direct desktop commands, use the dedicated narrow tool immediately:
+- pause/resume/play-pause -> media_control
+- mute/volume/next/previous media -> media_control
+- focus Chrome -> focus_chrome
+- next/previous/close Chrome tab -> chrome_tab_control
+- open Gmail -> open_gmail
+- open VS Code -> open_vscode
+
+Do not claim a desktop action happened unless the matching tool succeeded.
+Do not use run_python, write_file, or arbitrary command execution for these actions.
 
 Use web_search when the user asks for current, live, recent, online, news,
 weather, prices, scores, or other information that may have changed.
@@ -391,6 +448,11 @@ def parse_tool_request(response: str):
         "list_chrome_profiles",
         "set_default_chrome_profile",
         "open_chrome_url",
+        "media_control",
+        "focus_chrome",
+        "chrome_tab_control",
+        "open_gmail",
+        "open_vscode",
     }:
         return {
             "action": "tool",
