@@ -1,12 +1,37 @@
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
+
+from config import WORKSPACE
 
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-WORKSPACE = (PROJECT_ROOT / "workspace").resolve()
+WORKSPACE.mkdir(parents=True, exist_ok=True)
 
 
 def _safe_path(relative_path: str = ".") -> Path:
-    target = (WORKSPACE / relative_path).resolve()
+    """Resolve a path inside the workspace, or refuse.
+
+    Normalises separators first so the guard behaves identically on POSIX
+    and Windows. Without this, "..\\main.py" is a traversal on Windows but
+    an ordinary filename on Linux.
+    """
+    if not isinstance(relative_path, str):
+        raise PermissionError("Access denied: path must be a string.")
+
+    candidate = relative_path.replace("\\", "/").strip()
+
+    if not candidate:
+        candidate = "."
+
+    if candidate.startswith("/") or PureWindowsPath(candidate).is_absolute():
+        raise PermissionError(
+            "Access denied: absolute paths are not permitted."
+        )
+
+    if any(part == ".." for part in candidate.split("/")):
+        raise PermissionError(
+            "Access denied: parent directory traversal is not permitted."
+        )
+
+    target = (WORKSPACE / candidate).resolve()
 
     try:
         target.relative_to(WORKSPACE)
