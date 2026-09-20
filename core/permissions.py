@@ -9,6 +9,11 @@ SAFE_TOOLS = {
     "list_chrome_profiles",
     "set_default_chrome_profile",
     "open_chrome_url",
+    "media_control",
+    "focus_chrome",
+    "chrome_tab_control",
+    "open_gmail",
+    "open_vscode",
 }
 
 REVIEW_TOOLS = {
