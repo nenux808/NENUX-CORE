@@ -183,13 +183,19 @@ Arguments:
 Allowed actions:
 play_pause, pause, resume, next, previous, mute, volume_down, volume_up
 
-14. focus_chrome
+14. open_chrome
 
 Arguments:
 
 {}
 
-15. chrome_tab_control
+15. focus_chrome
+
+Arguments:
+
+{}
+
+16. chrome_tab_control
 
 Arguments:
 
@@ -200,7 +206,7 @@ Arguments:
 Allowed actions:
 next_tab, previous_tab, close_tab
 
-16. open_gmail
+17. open_gmail
 
 Arguments:
 
@@ -210,7 +216,7 @@ Arguments:
 
 profile_directory is optional.
 
-17. open_vscode
+18. open_vscode
 
 Arguments:
 
@@ -250,6 +256,7 @@ DESKTOP CONTROL
 For direct desktop commands, use the dedicated narrow tool immediately:
 - pause/resume/play-pause -> media_control
 - mute/volume/next/previous media -> media_control
+- open Chrome -> open_chrome
 - focus Chrome -> focus_chrome
 - next/previous/close Chrome tab -> chrome_tab_control
 - open Gmail -> open_gmail
@@ -449,6 +456,7 @@ def parse_tool_request(response: str):
         "set_default_chrome_profile",
         "open_chrome_url",
         "media_control",
+        "open_chrome",
         "focus_chrome",
         "chrome_tab_control",
         "open_gmail",
