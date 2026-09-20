@@ -5,6 +5,7 @@ from tools.windows_desktop_control import (
     chrome_tab_control,
     media_control,
     open_gmail,
+    youtube_media_control,
 )
 
 
@@ -76,6 +77,37 @@ class TestWindowsDesktopControl(unittest.TestCase):
             "https://mail.google.com/",
             profile_directory="Default",
         )
+
+    @patch("tools.windows_desktop_control._press_key")
+    @patch("tools.windows_desktop_control._focus_window")
+    @patch("tools.windows_desktop_control._visible_chrome_windows")
+    def test_youtube_resume_targets_youtube_window(
+        self,
+        mock_windows,
+        mock_focus,
+        mock_press,
+    ):
+        mock_windows.return_value = [
+            (100, "Music Video - YouTube - Google Chrome"),
+        ]
+        mock_focus.return_value = True
+
+        result = youtube_media_control("resume")
+
+        self.assertTrue(result["success"])
+        self.assertEqual(result["target"], "youtube")
+        self.assertFalse(result["verified_playback_state"])
+        mock_focus.assert_called_once_with(100)
+        mock_press.assert_called_once()
+
+    @patch("tools.windows_desktop_control._visible_chrome_windows")
+    def test_youtube_resume_fails_without_visible_youtube(self, mock_windows):
+        mock_windows.return_value = [(100, "Gmail - Google Chrome")]
+
+        result = youtube_media_control("resume")
+
+        self.assertFalse(result["success"])
+        self.assertIn("YouTube", result["error"])
 
     @patch("tools.windows_desktop_control._press_key")
     def test_unmute_uses_mute_toggle_key(self, mock_press):
