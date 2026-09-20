@@ -93,6 +93,24 @@ class TestRequestRouter(unittest.TestCase):
     def test_open_vscode_routes_to_agent(self):
         self.assertEqual(route_request("open VS Code"), "agent_task")
 
+    def test_conversational_open_gmail_routes_to_agent(self):
+        self.assertEqual(
+            route_request("no just open Gmail on Chrome"),
+            "agent_task",
+        )
+
+    def test_pause_inside_sentence_routes_to_agent(self):
+        self.assertEqual(
+            route_request("I say pause it pause pause"),
+            "agent_task",
+        )
+
+    def test_video_play_routes_to_agent(self):
+        self.assertEqual(
+            route_request("the video play"),
+            "agent_task",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
