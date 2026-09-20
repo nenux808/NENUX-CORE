@@ -24,6 +24,7 @@ from tools.windows_desktop_control import (
     open_chrome,
     open_gmail,
     open_vscode,
+    youtube_media_control,
 )
 
 from core.permissions import request_permission
@@ -49,6 +50,7 @@ TOOL_REGISTRY = {
     "chrome_tab_control": chrome_tab_control,
     "open_gmail": open_gmail,
     "open_vscode": open_vscode,
+    "youtube_media_control": youtube_media_control,
 }
 
 
