@@ -96,16 +96,24 @@ class TestPolicy(unittest.TestCase):
             )
         )
 
-    def test_immediately_previous_filename_can_resolve_this_code(self):
+    def test_history_filename_does_not_resolve_this_code(self):
         history = [
             {"role": "user", "content": "Please look at calculator.py"},
             {"role": "assistant", "content": "Sure."},
         ]
 
-        self.assertFalse(
+        self.assertTrue(
             needs_code_target_clarification(
                 "debug this code",
                 history,
+            )
+        )
+
+    def test_current_filename_resolves_this_code(self):
+        self.assertFalse(
+            needs_code_target_clarification(
+                "debug this code in calculator.py",
+                [],
             )
         )
 
