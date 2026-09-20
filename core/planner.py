@@ -25,6 +25,7 @@ NENUX currently has ONLY these tools:
 - set_default_chrome_profile: remember the Chrome profile to use by default
 - open_chrome_url: open a verified HTTP(S) URL in a selected Chrome profile
 - media_control: send approved media/volume keys
+- open_chrome: launch Chrome
 - focus_chrome: bring a visible Chrome window to foreground
 - chrome_tab_control: next, previous, or close Chrome tab
 - open_gmail: open Gmail in the selected/default Chrome profile
@@ -59,7 +60,8 @@ RULES:
 20. If the user explicitly says to remember a chosen Chrome profile as default, use set_default_chrome_profile.
 21. For pause/resume/mute/volume/track controls, use media_control.
 22. For next/previous/close tab commands, use chrome_tab_control.
-23. For "open Gmail", use open_gmail. For "open VS Code", use open_vscode.
+23. For "open Chrome", use open_chrome. For "focus Chrome", use focus_chrome.
+24. For "open Gmail", use open_gmail. For "open VS Code", use open_vscode.
 24. Never use run_python or filesystem tools for simple desktop controls when a dedicated PC tool exists.
 
 Return ONLY valid JSON:
@@ -99,7 +101,10 @@ def _desktop_control_plan(goal: str) -> list[str] | None:
     if text.startswith("close tab") or text.startswith("close this tab"):
         return ["Close the current Chrome tab using chrome_tab_control"]
 
-    if text.startswith("focus chrome") or text.startswith("open chrome"):
+    if text.startswith("open chrome"):
+        return ["Open Google Chrome using open_chrome"]
+
+    if text.startswith("focus chrome"):
         return ["Bring Chrome to the foreground using focus_chrome"]
 
     if text.startswith("open gmail"):
