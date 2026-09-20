@@ -2,6 +2,7 @@ import unittest
 
 from core.policy import (
     enforce_lyrics_output_policy,
+    is_effective_lyrics_request,
     is_history_query,
     is_lyrics_context_followup,
     is_media_content_request,
@@ -50,6 +51,29 @@ class TestPolicyMediaMemory(unittest.TestCase):
             enforce_lyrics_output_policy("any lyric from a song?", response),
             response,
         )
+
+    def test_yes_please_is_effective_lyrics_request(self):
+        history = [
+            {"role": "user", "content": "Do you know any lyrics from Ocean Eyes?"},
+            {"role": "assistant", "content": "I can share a short verified excerpt."},
+        ]
+        self.assertTrue(
+            is_effective_lyrics_request("Yes, please.", history)
+        )
+
+    def test_yes_please_long_lyric_output_is_filtered(self):
+        history = [
+            {"role": "user", "content": "Do you know any lyrics from Ocean Eyes?"},
+            {"role": "assistant", "content": "I can share a short verified excerpt."},
+        ]
+        response = '"one two three four five six seven eight nine ten eleven twelve"'
+        filtered = enforce_lyrics_output_policy(
+            "Yes, please.",
+            response,
+            history=history,
+        )
+        self.assertNotEqual(filtered, response)
+        self.assertIn("brief summary", filtered)
 
 
 if __name__ == "__main__":
