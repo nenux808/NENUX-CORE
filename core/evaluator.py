@@ -253,7 +253,9 @@ def _enforce_tool_action_matching(
         description = str(step.get("description", "")).lower()
         required_tool = None
 
-        if "index_workspace_documents" in description or "index all supported workspace documents" in description:
+        if "open_chrome_url" in description or "open the verified youtube video" in description:
+            required_tool = "open_chrome_url"
+        elif "index_workspace_documents" in description or "index all supported workspace documents" in description:
             required_tool = "index_workspace_documents"
         elif "index_document" in description or "index the document" in description:
             required_tool = "index_document"
@@ -267,6 +269,27 @@ def _enforce_tool_action_matching(
             required_tool = "read_file"
         elif "run_python" in description or "execute the python" in description or "execute the script" in description:
             required_tool = "run_python"
+
+        if required_tool == "open_chrome_url" and required_tool in used_tools:
+            open_results = [
+                entry.get("result", {})
+                for entry in tool_trace
+                if isinstance(entry, dict) and entry.get("tool") == "open_chrome_url"
+            ]
+            if not any(
+                result.get("success") and result.get("opened")
+                for result in open_results
+                if isinstance(result, dict)
+            ):
+                evaluation_map[step_id] = {
+                    "step_id": step_id,
+                    "status": "pending",
+                    "reason": (
+                        "Chrome has not opened the requested URL yet; "
+                        "profile selection or another launch step is still required."
+                    ),
+                }
+                continue
 
         if required_tool and required_tool not in used_tools:
             evaluation_map[step_id] = {
