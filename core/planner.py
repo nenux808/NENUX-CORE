@@ -78,47 +78,63 @@ Return ONLY valid JSON:
 def _desktop_control_plan(goal: str) -> list[str] | None:
     text = goal.lower().strip()
 
-    media_map = (
-        (("pause",), "Pause or resume current media using media_control"),
-        (("resume", "unpause"), "Pause or resume current media using media_control"),
-        (("mute", "unmute"), "Toggle system mute using media_control"),
-        (("volume up", "turn it up"), "Increase system volume using media_control"),
-        (("volume down", "turn it down"), "Decrease system volume using media_control"),
-        (("next track", "skip"), "Skip to next media track using media_control"),
-        (("previous track",), "Go to previous media track using media_control"),
-    )
+    if any(phrase in text for phrase in ("pause", "pause it", "pause the video")):
+        return ["Pause or resume current media using media_control"]
 
-    for phrases, description in media_map:
-        if any(text.startswith(phrase) for phrase in phrases):
-            return [description]
+    if any(
+        phrase in text
+        for phrase in (
+            "resume",
+            "unpause",
+            "play it",
+            "play the video",
+            "video play",
+            "resume the video",
+        )
+    ):
+        return ["Pause or resume current media using media_control"]
 
-    if text.startswith("next tab"):
+    if "unmute" in text or "mute" in text:
+        return ["Toggle system mute using media_control"]
+
+    if "volume up" in text or "turn it up" in text:
+        return ["Increase system volume using media_control"]
+
+    if "volume down" in text or "turn it down" in text:
+        return ["Decrease system volume using media_control"]
+
+    if "next track" in text or re.search(r"\bskip\b", text):
+        return ["Skip to next media track using media_control"]
+
+    if "previous track" in text:
+        return ["Go to previous media track using media_control"]
+
+    if "next tab" in text:
         return ["Switch to the next Chrome tab using chrome_tab_control"]
 
-    if text.startswith("previous tab"):
+    if "previous tab" in text:
         return ["Switch to the previous Chrome tab using chrome_tab_control"]
 
-    if text.startswith("close tab") or text.startswith("close this tab"):
+    if "close this tab" in text or "close tab" in text:
         return ["Close the current Chrome tab using chrome_tab_control"]
 
-    if text.startswith("open chrome"):
+    if "open chrome" in text:
         return ["Open Google Chrome using open_chrome"]
 
-    if text.startswith("focus chrome"):
+    if "focus chrome" in text:
         return ["Bring Chrome to the foreground using focus_chrome"]
 
-    if text.startswith("open gmail"):
+    if "open gmail" in text:
         return ["Open Gmail in Chrome using open_gmail"]
 
     if (
-        text.startswith("open vscode")
-        or text.startswith("open vs code")
-        or text.startswith("open visual studio code")
+        "open vscode" in text
+        or "open vs code" in text
+        or "open visual studio code" in text
     ):
         return ["Open Visual Studio Code using open_vscode"]
 
     return None
-
 
 def _is_chrome_profile_default_goal(goal: str) -> bool:
     text = goal.lower().strip()
