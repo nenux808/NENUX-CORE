@@ -30,9 +30,11 @@ from tools.registry import execute_tool
 
 from core.planner import create_plan
 from core.evaluator import evaluate_steps
+from core.media_resolver import select_best_youtube_result
 from core.policy import (
     document_indexing_requested,
     enforce_lyrics_output_policy,
+    is_browser_media_correction_followup,
     is_browser_media_request,
     is_chrome_profile_followup,
     is_effective_lyrics_request,
@@ -189,7 +191,12 @@ PC / CHROME CONTROL
 Use list_chrome_profiles to inspect available local Chrome profiles.
 Use open_chrome_url only with a verified HTTP(S) URL. For media playback, first use
 web_search to find the most relevant official YouTube watch URL, then open it in Chrome.
-Never invent a YouTube watch URL. If open_chrome_url returns needs_profile_selection,
+Never invent a YouTube watch URL. Do not simply choose the first search result.
+For playback, prefer the result whose title best matches BOTH the requested title and artist,
+allowing for speech-recognition spelling errors. If the user says the wrong video was opened,
+perform a fresh search using the correction instead of claiming the song or artist does not exist.
+Never say a song or artist "does not exist" unless a fresh search produced no plausible matching evidence.
+If open_chrome_url returns needs_profile_selection,
 ask the user which listed Chrome profile to use and stop. If the user later selects a profile,
 continue the original playback request using that profile.
 Use set_default_chrome_profile only when the user explicitly asks to remember a profile as default.
@@ -737,6 +744,27 @@ Use tools again when current evidence is required.
             )
             continue
 
+        if browser_media_required and tool_name == "open_chrome_url":
+            latest_search = next(
+                (
+                    entry.get("result", {})
+                    for entry in reversed(tool_trace)
+                    if isinstance(entry, dict)
+                    and entry.get("tool") == "web_search"
+                    and isinstance(entry.get("result"), dict)
+                ),
+                None,
+            )
+
+            selected_media = select_best_youtube_result(
+                user_input,
+                latest_search or {},
+            )
+
+            if selected_media:
+                arguments = dict(arguments)
+                arguments["url"] = selected_media["url"]
+
         if memory_mode:
             messages.append({
                 "role": "assistant",
@@ -1122,6 +1150,14 @@ def process_user_request(
     )
 
     execution_input = user_input
+    if is_browser_media_correction_followup(user_input, history):
+        prior_media = recent_browser_media_request(history)
+        if prior_media:
+            execution_input = (
+                f"{prior_media}. User correction: {user_input}. "
+                "Search again and use the corrected title or artist evidence."
+            )
+
     if is_chrome_profile_followup(user_input, history):
         prior_media = recent_browser_media_request(history)
         if prior_media:
