@@ -256,7 +256,7 @@ def needs_code_target_clarification(
     text: str,
     history: list[dict] | None = None,
 ) -> bool:
-    """Ask which code/file is meant instead of inventing a debugging target."""
+    """Require an explicit current-turn target for deictic code debugging."""
     normalized = re.sub(r"\s+", " ", str(text).lower()).strip()
 
     deictic_debug_phrases = (
@@ -271,46 +271,17 @@ def needs_code_target_clarification(
     if not any(phrase in normalized for phrase in deictic_debug_phrases):
         return False
 
-    explicit_target_markers = (
-        ".py",
-        ".js",
-        ".ts",
-        ".tsx",
-        ".jsx",
-        ".java",
-        ".cpp",
-        ".c",
-        ".cs",
-        ".go",
-        ".rs",
-        ".php",
-        ".rb",
-        " file ",
-        " workspace ",
-        "traceback",
-        "error:",
+    # A concrete target must be present in this same request. Conversation
+    # history is context, not a reliable deictic pointer to a local file.
+    file_pattern = r"\b[\w.-]+\.(py|js|ts|tsx|jsx|java|cpp|c|cs|go|rs|php|rb)\b"
+
+    has_current_target = (
+        bool(re.search(file_pattern, normalized))
+        or "```" in str(text)
+        or "traceback" in normalized
+        or "error:" in normalized
+        or "file named " in normalized
+        or "file called " in normalized
     )
 
-    padded = f" {normalized} "
-    if any(marker in padded for marker in explicit_target_markers):
-        return False
-
-    previous_user = ""
-    for item in reversed(history or []):
-        if item.get("role") == "user":
-            previous_user = str(item.get("content", ""))
-            break
-
-    # "This code" may inherit only the immediately preceding user-provided
-    # code/file/error target. Older history is context, not a pointing target.
-    if (
-        "```" in previous_user
-        or "traceback" in previous_user.lower()
-        or re.search(
-            r"\b\w+\.(py|js|ts|tsx|jsx|java|cpp|c|cs|go|rs|php|rb)\b",
-            previous_user.lower(),
-        )
-    ):
-        return False
-
-    return True
+    return not has_current_target
