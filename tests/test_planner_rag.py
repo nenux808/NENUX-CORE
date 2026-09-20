@@ -54,6 +54,19 @@ class TestLocalDocumentPlanning(unittest.TestCase):
         )
         mock_chat.assert_not_called()
 
+    @patch("core.planner.chat")
+    def test_default_profile_change_skips_model_planner(self, mock_chat):
+        steps = create_plan("set first profile as default")
+
+        self.assertEqual(
+            steps,
+            [
+                "List available local Chrome profiles using list_chrome_profiles",
+                "Set the selected Chrome profile as default using set_default_chrome_profile",
+            ],
+        )
+        mock_chat.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()
