@@ -64,6 +64,15 @@ Return ONLY valid JSON:
 """
 
 
+def _is_chrome_profile_list_goal(goal: str) -> bool:
+    text = goal.lower().strip()
+    return (
+        "chrome" in text
+        and ("profile" in text or "profiles" in text)
+        and any(term in text for term in ("list", "show", "which", "what", "available", "check"))
+    )
+
+
 def _is_browser_media_goal(goal: str) -> bool:
     text = goal.lower().strip()
     return bool(re.match(r"^(play|watch|listen to)\b", text))
@@ -106,6 +115,11 @@ def _is_local_document_goal(goal: str) -> bool:
 
 
 def create_plan(goal: str) -> list[str]:
+
+    if _is_chrome_profile_list_goal(goal):
+        return [
+            "List available local Chrome profiles using list_chrome_profiles"
+        ]
 
     if _is_browser_media_goal(goal):
         return [
