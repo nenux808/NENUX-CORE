@@ -120,9 +120,40 @@ Arguments:
     "url": "https://example.com/page"
 }
 
+7. index_document
+
+Arguments:
+
+{
+    "path": "notes/example.txt"
+}
+
+8. index_workspace_documents
+
+Arguments:
+
+{}
+
+9. search_documents
+
+Arguments:
+
+{
+    "query": "question about indexed local documents",
+    "limit": 5
+}
+
 Use web_search to discover public sources. Use web_fetch when a factual answer
 depends on details that should be verified from the actual page instead of a
 search snippet. web_fetch is read-only and restricted to public HTTP(S) pages.
+
+LOCAL DOCUMENT RETRIEVAL
+
+Use index_document to index one supported text document in the NENUX workspace.
+Use index_workspace_documents to index all supported text documents under workspace.
+Use search_documents to answer questions from indexed local documents.
+Treat retrieved chunks as evidence tied to their source_path. Do not invent file content
+that is absent from the retrieved chunks. If no relevant chunks are found, say so.
 
 Use web_search when the user asks for current, live, recent, online, news,
 weather, prices, scores, or other information that may have changed.
@@ -308,6 +339,9 @@ def parse_tool_request(response: str):
         "run_python",
         "web_search",
         "web_fetch",
+        "index_document",
+        "index_workspace_documents",
+        "search_documents",
     }:
         return {
             "action": "tool",
