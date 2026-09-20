@@ -4,6 +4,7 @@ from unittest.mock import patch
 from tools.windows_desktop_control import (
     chrome_tab_control,
     media_control,
+    open_gmail,
 )
 
 
@@ -42,6 +43,47 @@ class TestWindowsDesktopControl(unittest.TestCase):
         self.assertEqual(result["action"], "close_tab")
         mock_focus.assert_called_once()
         mock_chord.assert_called_once()
+
+    @patch("tools.windows_desktop_control.open_chrome_url")
+    @patch("tools.windows_desktop_control.set_default_chrome_profile")
+    @patch("tools.windows_desktop_control.list_chrome_profiles")
+    def test_gmail_uses_first_profile_when_no_default(
+        self,
+        mock_profiles,
+        mock_set_default,
+        mock_open,
+    ):
+        mock_profiles.return_value = {
+            "success": True,
+            "saved_default": None,
+            "profiles": [
+                {"directory": "Default", "name": "Personal", "email": ""},
+                {"directory": "Profile 1", "name": "Work", "email": ""},
+            ],
+        }
+        mock_open.return_value = {
+            "success": True,
+            "opened": True,
+            "profile_directory": "Default",
+        }
+
+        result = open_gmail()
+
+        self.assertTrue(result["success"])
+        self.assertTrue(result["opened"])
+        mock_set_default.assert_called_once_with("Default")
+        mock_open.assert_called_once_with(
+            "https://mail.google.com/",
+            profile_directory="Default",
+        )
+
+    @patch("tools.windows_desktop_control._press_key")
+    def test_unmute_uses_mute_toggle_key(self, mock_press):
+        result = media_control("unmute")
+
+        self.assertTrue(result["success"])
+        self.assertEqual(result["action"], "unmute")
+        mock_press.assert_called_once()
 
 
 if __name__ == "__main__":
