@@ -68,6 +68,9 @@ RULES:
 23. For "open Chrome", use open_chrome. For "focus Chrome", use focus_chrome.
 24. For "open Gmail", use open_gmail. For "open VS Code", use open_vscode.
 24. Never use run_python or filesystem tools for simple desktop controls when a dedicated PC tool exists.
+25. The filesystem tool is already rooted inside the NENUX workspace. Use "." for the workspace root; never plan list_files with path "workspace".
+26. For local code debugging, inspect the named/provided local code and reproduce the error before using web_search. Do not add generic debugging-tip web searches unless the user explicitly asks for external research or local evidence shows a dependency/API issue that needs verification.
+27. Never guess which local code file "this code" refers to when no current or immediately preceding user message identifies the target.
 
 Return ONLY valid JSON:
 
