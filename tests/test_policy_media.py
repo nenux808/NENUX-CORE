@@ -3,6 +3,7 @@ import unittest
 from core.policy import (
     document_indexing_requested,
     enforce_lyrics_output_policy,
+    is_browser_media_correction_followup,
     is_effective_lyrics_request,
     is_history_query,
     is_lyrics_context_followup,
@@ -86,6 +87,24 @@ class TestPolicyMediaMemory(unittest.TestCase):
         self.assertFalse(
             document_indexing_requested(
                 "what does my document say about the retrieval system?"
+            )
+        )
+
+    def test_wrong_video_keeps_playback_context(self):
+        history = [
+            {
+                "role": "user",
+                "content": "play Trillium by Sean Putta",
+            },
+            {
+                "role": "assistant",
+                "content": "The video is now playing.",
+            },
+        ]
+        self.assertTrue(
+            is_browser_media_correction_followup(
+                "You played the wrong video, I need Trillium by Sean Puta",
+                history,
             )
         )
 
