@@ -38,8 +38,13 @@ CORE_NAME = "NENUX Core"
 CORE_VERSION = "0.11-dev"
 NODE_NAME = _env("NENUX_NODE", "TITANX")
 
+# Backward-compatible aliases retained for older v0.11 modules/scripts.
+AGENT_NAME = CORE_NAME
+VERSION = CORE_VERSION
+
 # Models
 CHAT_MODEL = _env("NENUX_MODEL", "qwen3:4b-instruct")
+MODEL = CHAT_MODEL
 PLANNER_MODEL = _env("NENUX_PLANNER_MODEL", CHAT_MODEL)
 EVALUATOR_MODEL = _env("NENUX_EVALUATOR_MODEL", CHAT_MODEL)
 EMBED_MODEL = _env("NENUX_EMBED_MODEL", "nomic-embed-text")
