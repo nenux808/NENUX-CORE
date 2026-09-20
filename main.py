@@ -31,6 +31,11 @@ from tools.registry import execute_tool
 from core.planner import create_plan
 from core.evaluator import evaluate_steps
 from core.media_resolver import select_best_youtube_result
+from core.desktop_intent import (
+    desktop_intent_command,
+    interpret_desktop_intent,
+    should_try_desktop_intent,
+)
 from core.policy import (
     document_indexing_requested,
     enforce_lyrics_output_policy,
@@ -1239,6 +1244,17 @@ def process_user_request(
     )
 
     execution_input = user_input
+
+    if should_try_desktop_intent(user_input):
+        desktop = interpret_desktop_intent(user_input)
+        if (
+            desktop.get("intent") != "none"
+            and float(desktop.get("confidence", 0.0)) >= 0.72
+        ):
+            canonical = desktop_intent_command(desktop["intent"])
+            if canonical:
+                execution_input = canonical
+
     if is_browser_media_correction_followup(user_input, history):
         prior_media = recent_browser_media_request(history)
         if prior_media:
