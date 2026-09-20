@@ -253,7 +253,17 @@ def _enforce_tool_action_matching(
         description = str(step.get("description", "")).lower()
         required_tool = None
 
-        if "set_default_chrome_profile" in description or "set the selected chrome profile as default" in description:
+        if "media_control" in description:
+            required_tool = "media_control"
+        elif "chrome_tab_control" in description:
+            required_tool = "chrome_tab_control"
+        elif "focus_chrome" in description:
+            required_tool = "focus_chrome"
+        elif "open_gmail" in description:
+            required_tool = "open_gmail"
+        elif "open_vscode" in description or "open visual studio code" in description:
+            required_tool = "open_vscode"
+        elif "set_default_chrome_profile" in description or "set the selected chrome profile as default" in description:
             required_tool = "set_default_chrome_profile"
         elif "list_chrome_profiles" in description or "list available local chrome profiles" in description:
             required_tool = "list_chrome_profiles"
