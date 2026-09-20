@@ -4,7 +4,7 @@ import json
 
 from ollama import chat
 
-from config import CHAT_MODEL
+from config import FAST_MODEL
 
 
 DESKTOP_INTENTS = {
@@ -74,7 +74,7 @@ Do not invent unsupported capabilities.
 def interpret_desktop_intent(text: str) -> dict:
     """Map free-form language to one whitelisted desktop intent."""
     response = chat(
-        model=CHAT_MODEL,
+        model=FAST_MODEL,
         messages=[
             {"role": "system", "content": INTENT_PROMPT},
             {"role": "user", "content": str(text)},
