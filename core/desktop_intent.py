@@ -207,3 +207,31 @@ def desktop_intent_tool_call(intent: str) -> dict | None:
         "open_vscode": {"tool": "open_vscode", "arguments": {}},
     }
     return mapping.get(intent)
+
+
+
+def desktop_intent_reply(intent: str, success: bool) -> str:
+    """Short voice-friendly confirmation for a direct desktop action."""
+    success_text = {
+        "media_pause": "Paused.",
+        "media_resume": "Resumed.",
+        "media_mute": "Muted.",
+        "media_unmute": "Unmuted.",
+        "volume_up": "Volume increased.",
+        "volume_down": "Volume decreased.",
+        "next_track": "Skipped to the next track.",
+        "previous_track": "Went to the previous track.",
+        "next_tab": "Switched to the next Chrome tab.",
+        "previous_tab": "Switched to the previous Chrome tab.",
+        "close_tab": "Closed the current Chrome tab.",
+        "close_all_tabs": "Closed all tabs in the current Chrome window.",
+        "open_chrome": "Chrome is open.",
+        "focus_chrome": "Chrome is in front.",
+        "open_gmail": "Gmail is open.",
+        "open_vscode": "VS Code is open.",
+    }
+
+    if success:
+        return success_text.get(intent, "Done.")
+
+    return "I couldn't complete that desktop action."
