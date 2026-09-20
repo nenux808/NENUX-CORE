@@ -8,6 +8,7 @@ from config import CHAT_MODEL
 
 
 ACTION_PATTERNS = (
+    r"^\s*(play|watch|listen to)\b",
     r"\b(latest|current|currently|today|tonight|right now|live|news|weather|forecast|price|score)\b",
     r"\b(search|look up|find online|on the web|internet)\b",
     r"\b(run|execute|test|verify|debug|fix|repair)\b",
