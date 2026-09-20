@@ -12,7 +12,15 @@ from core.policy import (
 )
 
 from tools.filesystem import _safe_path
-from config import CORE_VERSION, CHAT_MODEL, EMBED_MODEL
+from config import (
+    CORE_VERSION,
+    CHAT_MODEL,
+    FAST_MODEL,
+    HEAVY_MODEL,
+    PLANNER_MODEL,
+    EVALUATOR_MODEL,
+    EMBED_MODEL,
+)
 from memory import database
 
 
@@ -90,6 +98,10 @@ class TestRuntimeSmoke(unittest.TestCase):
             "0.11-dev"
         )
         self.assertTrue(CHAT_MODEL)
+        self.assertTrue(FAST_MODEL)
+        self.assertTrue(HEAVY_MODEL)
+        self.assertTrue(PLANNER_MODEL)
+        self.assertTrue(EVALUATOR_MODEL)
         self.assertTrue(EMBED_MODEL)
 
 
