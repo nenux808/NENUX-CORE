@@ -33,6 +33,8 @@ from core.evaluator import evaluate_steps
 from core.media_resolver import select_best_youtube_result
 from core.desktop_intent import (
     desktop_intent_command,
+    desktop_intent_reply,
+    desktop_intent_tool_call,
     interpret_desktop_intent,
     should_try_desktop_intent,
 )
@@ -524,6 +526,7 @@ def run_agent(
     retrieval_required: bool = False,
     source_fetch_required: bool = False,
     browser_media_required: bool = False,
+    desktop_intent: str | None = None,
 ):
     memory_context = build_memory_context()
 
@@ -587,6 +590,60 @@ Use tools again when current evidence is required.
     max_steps = MAX_AGENT_STEPS
 
     tool_trace = []
+
+    if desktop_intent:
+        direct_call = desktop_intent_tool_call(desktop_intent)
+        if direct_call:
+            tool_name = direct_call["tool"]
+            arguments = direct_call.get("arguments", {})
+
+            print(
+                f"\n[TOOL] {tool_name} "
+                f"{json.dumps(arguments, ensure_ascii=False)}"
+            )
+
+            result = execute_tool(tool_name, arguments)
+
+            trace_entry = {
+                "sequence": 1,
+                "tool": tool_name,
+                "arguments": arguments,
+                "result": result,
+            }
+            tool_trace.append(trace_entry)
+
+            print(
+                "[RESULT]",
+                json.dumps(
+                    result,
+                    indent=2,
+                    ensure_ascii=False,
+                ),
+            )
+
+            if isinstance(result, dict) and result.get("needs_profile_selection"):
+                profiles = result.get("profiles", [])
+                labels = []
+                for index, profile in enumerate(profiles, start=1):
+                    name = str(profile.get("name", "")).strip() or str(profile.get("directory", "")).strip()
+                    email = str(profile.get("email", "")).strip()
+                    labels.append(
+                        f"{index}. {name}" + (f" ({email})" if email else "")
+                    )
+
+                profile_text = "; ".join(labels) if labels else "the available Chrome profiles"
+                return (
+                    "Which Chrome profile should I use? " + profile_text,
+                    tool_trace,
+                )
+
+            return (
+                desktop_intent_reply(
+                    desktop_intent,
+                    bool(isinstance(result, dict) and result.get("success")),
+                ),
+                tool_trace,
+            )
 
     consecutive_failures = 0
 
@@ -1244,6 +1301,7 @@ def process_user_request(
     )
 
     execution_input = user_input
+    resolved_desktop_intent = None
 
     if should_try_desktop_intent(user_input):
         desktop = interpret_desktop_intent(user_input)
@@ -1251,7 +1309,8 @@ def process_user_request(
             desktop.get("intent") != "none"
             and float(desktop.get("confidence", 0.0)) >= 0.72
         ):
-            canonical = desktop_intent_command(desktop["intent"])
+            resolved_desktop_intent = desktop["intent"]
+            canonical = desktop_intent_command(resolved_desktop_intent)
             if canonical:
                 execution_input = canonical
 
@@ -1349,6 +1408,7 @@ def process_user_request(
                 route == "retrieval" and media_context
             ),
             browser_media_required=browser_media_context,
+            desktop_intent=resolved_desktop_intent,
         )
 
         reply = enforce_lyrics_output_policy(
