@@ -13,6 +13,8 @@ DESKTOP_INTENTS = {
     "media_resume",
     "media_mute",
     "media_unmute",
+    "youtube_pause",
+    "youtube_resume",
     "volume_up",
     "volume_down",
     "next_track",
@@ -39,6 +41,8 @@ media_pause
 media_resume
 media_mute
 media_unmute
+youtube_pause
+youtube_resume
 volume_up
 volume_down
 next_track
@@ -64,6 +68,9 @@ Examples:
 "make it louder" -> volume_up
 "hold the video" -> media_pause
 "continue the video" -> media_resume
+"pause youtube" -> youtube_pause
+"resume youtube" -> youtube_resume
+"continue youtube" -> youtube_resume
 "open my mail" -> open_gmail
 
 Use none for ordinary conversation, questions, or requests outside the listed capabilities.
@@ -73,6 +80,13 @@ Do not invent unsupported capabilities.
 
 def interpret_desktop_intent(text: str) -> dict:
     """Map free-form language to one whitelisted desktop intent."""
+    normalized_text = str(text).strip().lower()
+
+    if "youtube" in normalized_text:
+        if any(term in normalized_text for term in ("resume", "continue", "unpause", "play")):
+            return {"intent": "youtube_resume", "confidence": 1.0}
+        if "pause" in normalized_text:
+            return {"intent": "youtube_pause", "confidence": 1.0}
     response = chat(
         model=FAST_MODEL,
         options={"num_ctx": MODEL_CONTEXT_TOKENS},
@@ -116,6 +130,8 @@ def desktop_intent_plan(intent: str) -> list[str] | None:
         "media_resume": ["Resume current media using media_control"],
         "media_mute": ["Mute system audio using media_control"],
         "media_unmute": ["Unmute system audio using media_control"],
+        "youtube_pause": ["Pause YouTube in the visible Chrome window using youtube_media_control"],
+        "youtube_resume": ["Resume YouTube in the visible Chrome window using youtube_media_control"],
         "volume_up": ["Increase system volume using media_control"],
         "volume_down": ["Decrease system volume using media_control"],
         "next_track": ["Skip to next media track using media_control"],
@@ -170,6 +186,8 @@ def desktop_intent_command(intent: str) -> str | None:
         "media_resume": "resume the current media",
         "media_mute": "mute the system audio",
         "media_unmute": "unmute the system audio",
+        "youtube_pause": "pause YouTube",
+        "youtube_resume": "resume YouTube",
         "volume_up": "increase the system volume",
         "volume_down": "decrease the system volume",
         "next_track": "play the next media track",
@@ -194,6 +212,8 @@ def desktop_intent_tool_call(intent: str) -> dict | None:
         "media_resume": {"tool": "media_control", "arguments": {"action": "resume"}},
         "media_mute": {"tool": "media_control", "arguments": {"action": "mute"}},
         "media_unmute": {"tool": "media_control", "arguments": {"action": "unmute"}},
+        "youtube_pause": {"tool": "youtube_media_control", "arguments": {"action": "pause"}},
+        "youtube_resume": {"tool": "youtube_media_control", "arguments": {"action": "resume"}},
         "volume_up": {"tool": "media_control", "arguments": {"action": "volume_up"}},
         "volume_down": {"tool": "media_control", "arguments": {"action": "volume_down"}},
         "next_track": {"tool": "media_control", "arguments": {"action": "next"}},
@@ -218,6 +238,8 @@ def desktop_intent_reply(intent: str, success: bool) -> str:
         "media_resume": "Resumed.",
         "media_mute": "Muted.",
         "media_unmute": "Unmuted.",
+        "youtube_pause": "Sent the pause command to YouTube.",
+        "youtube_resume": "Sent the resume command to YouTube.",
         "volume_up": "Volume increased.",
         "volume_down": "Volume decreased.",
         "next_track": "Skipped to the next track.",
