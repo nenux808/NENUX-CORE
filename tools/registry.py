@@ -25,6 +25,7 @@ from tools.windows_desktop_control import (
     open_chrome,
     open_gmail,
     open_vscode,
+    open_file_explorer,
     youtube_media_control,
 )
 
@@ -52,6 +53,7 @@ TOOL_REGISTRY = {
     "chrome_tab_control": chrome_tab_control,
     "open_gmail": open_gmail,
     "open_vscode": open_vscode,
+    "open_file_explorer": open_file_explorer,
     "youtube_media_control": youtube_media_control,
 }
 
