@@ -58,6 +58,7 @@ from core.policy import (
     memory_only_mode,
     needs_code_target_clarification,
     recent_browser_media_request,
+    recent_youtube_search_request,
     should_store_task_memory,
 )
 from core.router import route_request
@@ -581,6 +582,7 @@ def run_agent(
     browser_media_required: bool = False,
     desktop_intent: str | None = None,
     youtube_search_query: str | None = None,
+    youtube_search_profile: str | None = None,
     model_name: str | None = None,
 ):
     if model_name is None:
@@ -658,6 +660,8 @@ Use tools again when current evidence is required.
     if youtube_search_query:
         tool_name = "open_youtube_search"
         arguments = {"query": youtube_search_query}
+        if youtube_search_profile:
+            arguments["profile_directory"] = youtube_search_profile
 
         print(
             f"\n[TOOL] {tool_name} "
@@ -1435,6 +1439,7 @@ def process_user_request(
         if is_youtube_search_request(user_input)
         else ""
     )
+    youtube_search_profile = None
 
     if should_try_desktop_intent(user_input):
         desktop = interpret_desktop_intent(user_input)
@@ -1457,10 +1462,18 @@ def process_user_request(
 
     if is_chrome_profile_followup(user_input, history):
         prior_media = recent_browser_media_request(history)
+        prior_youtube_search = recent_youtube_search_request(history)
+
         if prior_media:
             execution_input = (
                 f"{prior_media}. Use the Chrome profile selected by the user: {user_input}"
             )
+        elif prior_youtube_search:
+            youtube_search_query = extract_youtube_search_query(
+                prior_youtube_search
+            )
+            youtube_search_profile = user_input
+            execution_input = prior_youtube_search
 
     route = (
         "agent_task"
@@ -1555,6 +1568,7 @@ def process_user_request(
             browser_media_required=browser_media_context,
             desktop_intent=resolved_desktop_intent,
             youtube_search_query=youtube_search_query or None,
+            youtube_search_profile=youtube_search_profile,
             model_name=model_decision.model,
         )
 
