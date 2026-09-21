@@ -5,6 +5,7 @@ from tools.windows_desktop_control import (
     chrome_tab_control,
     media_control,
     open_gmail,
+    open_file_explorer,
     youtube_media_control,
 )
 
@@ -135,6 +136,18 @@ class TestWindowsDesktopControl(unittest.TestCase):
         self.assertEqual(result["action"], "close_all_tabs")
         mock_focus.assert_called_once()
         mock_chord.assert_called_once()
+
+    @patch("tools.windows_desktop_control.subprocess.Popen")
+    def test_open_file_explorer_launches_explorer(self, mock_popen):
+        result = open_file_explorer()
+
+        self.assertTrue(result["success"])
+        self.assertTrue(result["opened"])
+        self.assertEqual(result["application"], "File Explorer")
+        mock_popen.assert_called_once_with(
+            ["explorer.exe"],
+            close_fds=True,
+        )
 
 
 if __name__ == "__main__":
