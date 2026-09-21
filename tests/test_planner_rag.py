@@ -147,6 +147,14 @@ class TestLocalDocumentPlanning(unittest.TestCase):
         )
         mock_chat.assert_not_called()
 
+    @patch("core.planner.chat")
+    def test_drive_inspection_is_deterministic(self, mock_chat):
+        self.assertEqual(
+            create_plan("check the C drive"),
+            ["Inspect the C: drive root using inspect_drive"],
+        )
+        mock_chat.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()
