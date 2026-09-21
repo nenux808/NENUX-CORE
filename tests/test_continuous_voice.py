@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import numpy as np
 
-from clara import resolve_voice_command
+from clara import is_global_stop_command, resolve_voice_command
 from config import (
     MICROPHONE_MIN_VOICED_RATIO,
     MICROPHONE_SPEECH_RMS_THRESHOLD,
@@ -107,6 +107,11 @@ class TestContinuousVoiceRouting(unittest.TestCase):
         command, active = resolve_voice_command("what number did I just tell you?", True)
         self.assertEqual(command, "what number did I just tell you?")
         self.assertTrue(active)
+
+    def test_stop_listening_is_global(self):
+        self.assertTrue(is_global_stop_command("stop listening"))
+        self.assertTrue(is_global_stop_command("Goodbye!"))
+        self.assertFalse(is_global_stop_command("stop the video"))
 
 
 if __name__ == "__main__":
