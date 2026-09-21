@@ -107,6 +107,18 @@ class TestLocalDocumentPlanning(unittest.TestCase):
         )
         mock_chat.assert_not_called()
 
+    @patch("core.planner.chat")
+    def test_youtube_search_is_deterministic(self, mock_chat):
+        steps = create_plan("search weekends playlist in youtube")
+
+        self.assertEqual(
+            steps,
+            [
+                'Open YouTube search results for "weekends playlist" in Chrome using open_youtube_search'
+            ],
+        )
+        mock_chat.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()
