@@ -309,3 +309,24 @@ def open_vscode() -> dict:
         "opened": True,
         "application": "Visual Studio Code",
     }
+
+
+
+def open_file_explorer() -> dict:
+    """Launch Windows File Explorer without exposing arbitrary shell access."""
+    try:
+        subprocess.Popen(
+            ["explorer.exe"],
+            close_fds=True,
+        )
+    except OSError as exc:
+        return {
+            "success": False,
+            "error": f"Could not open File Explorer: {exc}",
+        }
+
+    return {
+        "success": True,
+        "opened": True,
+        "application": "File Explorer",
+    }
