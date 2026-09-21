@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from tools.windows_desktop_control import (
     chrome_tab_control,
+    inspect_drive,
     media_control,
     open_gmail,
     open_file_explorer,
@@ -148,6 +149,35 @@ class TestWindowsDesktopControl(unittest.TestCase):
             ["explorer.exe"],
             close_fds=True,
         )
+
+    @patch("tools.windows_desktop_control.Path")
+    @patch("tools.windows_desktop_control.shutil.disk_usage")
+    def test_inspect_drive_is_read_only_root_listing(
+        self,
+        mock_usage,
+        mock_path,
+    ):
+        fake_root = mock_path.return_value
+        fake_root.exists.return_value = True
+        fake_root.iterdir.return_value = []
+        mock_usage.return_value = type(
+            "Usage",
+            (),
+            {"total": 100, "used": 40, "free": 60},
+        )()
+
+        result = inspect_drive("C")
+
+        self.assertTrue(result["success"])
+        self.assertEqual(result["drive"], "C:")
+        self.assertEqual(result["scope"], "drive_root_only")
+        self.assertEqual(result["items"], [])
+
+    def test_inspect_drive_rejects_arbitrary_path(self):
+        result = inspect_drive("C:/Users")
+
+        self.assertFalse(result["success"])
+        self.assertIn("single Windows drive letter", result["error"])
 
 
 if __name__ == "__main__":
