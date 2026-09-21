@@ -82,6 +82,20 @@ def interpret_desktop_intent(text: str) -> dict:
     """Map free-form language to one whitelisted desktop intent."""
     normalized_text = str(text).strip().lower()
 
+    email_action_terms = (
+        "send email",
+        "send the email",
+        "send an email",
+        "compose email",
+        "compose an email",
+        "write email",
+        "write an email",
+        "reply to email",
+        "forward email",
+    )
+    if any(term in normalized_text for term in email_action_terms):
+        return {"intent": "none", "confidence": 1.0}
+
     if "youtube" in normalized_text:
         if any(term in normalized_text for term in ("resume", "continue", "unpause", "play")):
             return {"intent": "youtube_resume", "confidence": 1.0}
