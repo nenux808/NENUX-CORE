@@ -261,6 +261,14 @@ Arguments:
 
 Use this for commands that explicitly ask to search or find something on YouTube.
 
+21. open_file_explorer
+
+Arguments:
+
+{}
+
+Use this only to launch Windows File Explorer.
+
 Use web_search to discover public sources. Use web_fetch when a factual answer
 depends on details that should be verified from the actual page instead of a
 search snippet. web_fetch is read-only and restricted to public HTTP(S) pages.
@@ -1618,6 +1626,7 @@ def process_user_request(
             "open_youtube_search",
             "open_gmail",
             "open_vscode",
+            "open_file_explorer",
             "youtube_media_control",
             "list_chrome_profiles",
             "set_default_chrome_profile",
