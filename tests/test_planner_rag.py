@@ -119,6 +119,34 @@ class TestLocalDocumentPlanning(unittest.TestCase):
         )
         mock_chat.assert_not_called()
 
+    @patch("core.planner.chat")
+    def test_youtube_resume_uses_targeted_plan(self, mock_chat):
+        self.assertEqual(
+            create_plan("resume youtube"),
+            [
+                "Resume YouTube in the visible Chrome window using youtube_media_control"
+            ],
+        )
+        mock_chat.assert_not_called()
+
+    @patch("core.planner.chat")
+    def test_youtube_pause_uses_targeted_plan(self, mock_chat):
+        self.assertEqual(
+            create_plan("pause YouTube video"),
+            [
+                "Pause YouTube in the visible Chrome window using youtube_media_control"
+            ],
+        )
+        mock_chat.assert_not_called()
+
+    @patch("core.planner.chat")
+    def test_file_explorer_is_deterministic(self, mock_chat):
+        self.assertEqual(
+            create_plan("can you open file explorer?"),
+            ["Open Windows File Explorer using open_file_explorer"],
+        )
+        mock_chat.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()
