@@ -29,6 +29,7 @@ DESKTOP_INTENTS = {
     "open_gmail",
     "open_vscode",
     "open_file_explorer",
+    "inspect_drive",
 }
 
 
@@ -58,6 +59,7 @@ focus_chrome
 open_gmail
 open_vscode
 open_file_explorer
+inspect_drive
 
 Interpret meaning, not exact wording. Be tolerant of speech-recognition mistakes when the
 meaning is still clear.
@@ -77,6 +79,8 @@ Examples:
 "open my mail" -> open_gmail
 "open file explorer" -> open_file_explorer
 "open explorer" -> open_file_explorer
+"check the c drive" -> inspect_drive
+"inspect d drive" -> inspect_drive
 
 Use none for ordinary conversation, questions, or requests outside the listed capabilities.
 Do not invent unsupported capabilities.
@@ -106,6 +110,17 @@ def interpret_desktop_intent(text: str) -> dict:
         or re.search(r"\bopen\s+explorer\b", normalized_text)
     ):
         return {"intent": "open_file_explorer", "confidence": 1.0}
+
+    drive_match = re.search(
+        r"\b(?:check|inspect|look at|show|view)\s+(?:the\s+)?([a-z])(?::)?\s+drive\b",
+        normalized_text,
+    )
+    if drive_match:
+        return {
+            "intent": "inspect_drive",
+            "confidence": 1.0,
+            "drive": drive_match.group(1).upper(),
+        }
 
     if "youtube" in normalized_text:
         if any(term in normalized_text for term in ("resume", "continue", "unpause", "play")):
@@ -170,6 +185,7 @@ def desktop_intent_plan(intent: str) -> list[str] | None:
         "open_gmail": ["Open Gmail in Chrome using open_gmail"],
         "open_vscode": ["Open Visual Studio Code using open_vscode"],
         "open_file_explorer": ["Open Windows File Explorer using open_file_explorer"],
+        "inspect_drive": ["Inspect the requested Windows drive root using inspect_drive"],
     }
     return mapping.get(intent)
 
@@ -203,6 +219,8 @@ def should_try_desktop_intent(text: str) -> bool:
         "bring",
         "file explorer",
         "explorer",
+        "drive",
+        "inspect",
     )
     return any(hint in normalized for hint in hints)
 
@@ -229,13 +247,26 @@ def desktop_intent_command(intent: str) -> str | None:
         "open_gmail": "open Gmail",
         "open_vscode": "open VS Code",
         "open_file_explorer": "open File Explorer",
+        "inspect_drive": "inspect the requested Windows drive",
     }
     return mapping.get(intent)
 
 
 
-def desktop_intent_tool_call(intent: str) -> dict | None:
+def desktop_intent_tool_call(
+    intent: str,
+    details: dict | None = None,
+) -> dict | None:
     """Map one approved semantic intent to one whitelisted tool call."""
+    if intent == "inspect_drive":
+        drive = str((details or {}).get("drive", "")).strip().upper()
+        if not drive:
+            return None
+        return {
+            "tool": "inspect_drive",
+            "arguments": {"drive": drive},
+        }
+
     mapping = {
         "media_pause": {"tool": "media_control", "arguments": {"action": "pause"}},
         "media_resume": {"tool": "media_control", "arguments": {"action": "resume"}},
@@ -283,6 +314,7 @@ def desktop_intent_reply(intent: str, success: bool) -> str:
         "open_gmail": "Gmail is open.",
         "open_vscode": "VS Code is open.",
         "open_file_explorer": "File Explorer is open.",
+        "inspect_drive": "Drive inspection completed.",
     }
 
     if success:
