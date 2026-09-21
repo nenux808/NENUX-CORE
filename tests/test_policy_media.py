@@ -4,6 +4,9 @@ from core.policy import (
     document_indexing_requested,
     enforce_lyrics_output_policy,
     is_browser_media_correction_followup,
+    is_chrome_profile_followup,
+    is_youtube_search_request,
+    extract_youtube_search_query,
     is_effective_lyrics_request,
     is_history_query,
     is_lyrics_context_followup,
@@ -104,6 +107,34 @@ class TestPolicyMediaMemory(unittest.TestCase):
         self.assertTrue(
             is_browser_media_correction_followup(
                 "You played the wrong video, I need Trillium by Sean Puta",
+                history,
+            )
+        )
+
+    def test_youtube_search_request_is_detected(self):
+        command = "search weekends playlist in youtube"
+
+        self.assertTrue(is_youtube_search_request(command))
+        self.assertEqual(
+            extract_youtube_search_query(command),
+            "weekends playlist",
+        )
+
+    def test_profile_followup_can_resume_youtube_search(self):
+        history = [
+            {
+                "role": "user",
+                "content": "search weekends playlist in youtube",
+            },
+            {
+                "role": "assistant",
+                "content": "Which Chrome profile should I use?",
+            },
+        ]
+
+        self.assertTrue(
+            is_chrome_profile_followup(
+                "first",
                 history,
             )
         )
