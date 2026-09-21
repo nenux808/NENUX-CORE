@@ -21,6 +21,7 @@ from tools.windows_control import (
 from tools.windows_desktop_control import (
     chrome_tab_control,
     focus_chrome,
+    inspect_drive,
     media_control,
     open_chrome,
     open_gmail,
@@ -50,6 +51,7 @@ TOOL_REGISTRY = {
     "media_control": media_control,
     "open_chrome": open_chrome,
     "focus_chrome": focus_chrome,
+    "inspect_drive": inspect_drive,
     "chrome_tab_control": chrome_tab_control,
     "open_gmail": open_gmail,
     "open_vscode": open_vscode,
