@@ -4,7 +4,7 @@ import json
 import os
 import subprocess
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import quote_plus, urlparse
 
 from memory.database import remember, recall
 
@@ -254,3 +254,34 @@ def open_chrome_url(
         "profile_directory": selected,
         "url": url,
     }
+
+
+
+def open_youtube_search(
+    query: str,
+    profile_directory: str | None = None,
+) -> dict:
+    """Open YouTube's own search-results page in Chrome."""
+    cleaned = str(query).strip()
+    if not cleaned:
+        return {
+            "success": False,
+            "error": "YouTube search query cannot be empty.",
+        }
+
+    url = (
+        "https://www.youtube.com/results?search_query="
+        + quote_plus(cleaned)
+    )
+
+    result = open_chrome_url(
+        url,
+        profile_directory=profile_directory,
+    )
+
+    if isinstance(result, dict):
+        result = dict(result)
+        result["query"] = cleaned
+        result["target"] = "youtube_search"
+
+    return result
