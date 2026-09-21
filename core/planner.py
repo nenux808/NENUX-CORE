@@ -3,6 +3,10 @@ import json
 from ollama import chat
 
 from config import PLANNER_MODEL, MODEL_CONTEXT_TOKENS
+from core.policy import (
+    extract_youtube_search_query,
+    is_youtube_search_request,
+)
 from core.desktop_intent import (
     desktop_intent_plan,
     interpret_desktop_intent,
@@ -35,6 +39,7 @@ NENUX currently has ONLY these tools:
 - chrome_tab_control: next, previous, or close Chrome tab
 - open_gmail: open Gmail in the selected/default Chrome profile
 - open_vscode: launch Visual Studio Code
+- open_youtube_search: open YouTube search results for a query in Chrome
 
 RULES:
 
@@ -61,6 +66,7 @@ RULES:
 16. If indexing is explicitly requested, use index_document or index_workspace_documents before search_documents.
 17. Do not use web_search for a question that is specifically about the user's local workspace documents unless the user also asks for external verification.
 18. For media playback commands such as "play <song>" or "watch <video>", use web_search to find the most relevant official YouTube watch URL, then use open_chrome_url. Do not invent a YouTube URL.
+18a. For commands like "search <query> on YouTube" or "find <query> in YouTube", use open_youtube_search directly. Do not use web_search and do not merely list links.
 19. If open_chrome_url reports that multiple profiles exist and no default is saved, stop and ask the user which listed Chrome profile to use.
 20. If the user explicitly says to remember a chosen Chrome profile as default, use set_default_chrome_profile.
 21. For pause/resume/mute/volume/track controls, use media_control.
@@ -215,6 +221,12 @@ def _is_local_document_goal(goal: str) -> bool:
 
 
 def create_plan(goal: str) -> list[str]:
+
+    if is_youtube_search_request(goal):
+        query = extract_youtube_search_query(goal)
+        return [
+            f'Open YouTube search results for "{query}" in Chrome using open_youtube_search'
+        ]
 
     desktop_plan = _desktop_control_plan(goal)
     if desktop_plan:
