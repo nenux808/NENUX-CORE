@@ -15,6 +15,7 @@ from memory.document_index import (
 from tools.windows_control import (
     list_chrome_profiles,
     open_chrome_url,
+    open_youtube_search,
     set_default_chrome_profile,
 )
 from tools.windows_desktop_control import (
@@ -43,6 +44,7 @@ TOOL_REGISTRY = {
     "search_documents": search_documents,
     "list_chrome_profiles": list_chrome_profiles,
     "open_chrome_url": open_chrome_url,
+    "open_youtube_search": open_youtube_search,
     "set_default_chrome_profile": set_default_chrome_profile,
     "media_control": media_control,
     "open_chrome": open_chrome,
