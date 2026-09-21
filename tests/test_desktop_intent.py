@@ -52,6 +52,24 @@ class TestDesktopIntent(unittest.TestCase):
         self.assertEqual(tool_call["tool"], "youtube_media_control")
         self.assertEqual(tool_call["arguments"]["action"], "resume")
 
+    def test_file_explorer_uses_direct_intent(self):
+        result = interpret_desktop_intent("can you open file explorer?")
+
+        self.assertEqual(result["intent"], "open_file_explorer")
+        self.assertEqual(result["confidence"], 1.0)
+
+        tool_call = desktop_intent_tool_call(result["intent"])
+        self.assertEqual(
+            tool_call,
+            {"tool": "open_file_explorer", "arguments": {}},
+        )
+
+    def test_send_email_is_not_open_gmail(self):
+        result = interpret_desktop_intent("can you send the email?")
+
+        self.assertEqual(result["intent"], "none")
+        self.assertEqual(result["confidence"], 1.0)
+
 
 if __name__ == "__main__":
     unittest.main()
