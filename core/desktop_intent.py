@@ -1,6 +1,7 @@
 """Semantic interpretation for approved desktop-control intents."""
 
 import json
+import re
 
 from ollama import chat
 
@@ -27,6 +28,7 @@ DESKTOP_INTENTS = {
     "focus_chrome",
     "open_gmail",
     "open_vscode",
+    "open_file_explorer",
 }
 
 
@@ -55,6 +57,7 @@ open_chrome
 focus_chrome
 open_gmail
 open_vscode
+open_file_explorer
 
 Interpret meaning, not exact wording. Be tolerant of speech-recognition mistakes when the
 meaning is still clear.
@@ -72,6 +75,8 @@ Examples:
 "resume youtube" -> youtube_resume
 "continue youtube" -> youtube_resume
 "open my mail" -> open_gmail
+"open file explorer" -> open_file_explorer
+"open explorer" -> open_file_explorer
 
 Use none for ordinary conversation, questions, or requests outside the listed capabilities.
 Do not invent unsupported capabilities.
@@ -95,6 +100,12 @@ def interpret_desktop_intent(text: str) -> dict:
     )
     if any(term in normalized_text for term in email_action_terms):
         return {"intent": "none", "confidence": 1.0}
+
+    if (
+        "file explorer" in normalized_text
+        or re.search(r"\bopen\s+explorer\b", normalized_text)
+    ):
+        return {"intent": "open_file_explorer", "confidence": 1.0}
 
     if "youtube" in normalized_text:
         if any(term in normalized_text for term in ("resume", "continue", "unpause", "play")):
@@ -158,6 +169,7 @@ def desktop_intent_plan(intent: str) -> list[str] | None:
         "focus_chrome": ["Bring Chrome to the foreground using focus_chrome"],
         "open_gmail": ["Open Gmail in Chrome using open_gmail"],
         "open_vscode": ["Open Visual Studio Code using open_vscode"],
+        "open_file_explorer": ["Open Windows File Explorer using open_file_explorer"],
     }
     return mapping.get(intent)
 
@@ -189,6 +201,8 @@ def should_try_desktop_intent(text: str) -> bool:
         "open",
         "shut",
         "bring",
+        "file explorer",
+        "explorer",
     )
     return any(hint in normalized for hint in hints)
 
@@ -214,6 +228,7 @@ def desktop_intent_command(intent: str) -> str | None:
         "focus_chrome": "focus Chrome",
         "open_gmail": "open Gmail",
         "open_vscode": "open VS Code",
+        "open_file_explorer": "open File Explorer",
     }
     return mapping.get(intent)
 
@@ -240,6 +255,7 @@ def desktop_intent_tool_call(intent: str) -> dict | None:
         "focus_chrome": {"tool": "focus_chrome", "arguments": {}},
         "open_gmail": {"tool": "open_gmail", "arguments": {}},
         "open_vscode": {"tool": "open_vscode", "arguments": {}},
+        "open_file_explorer": {"tool": "open_file_explorer", "arguments": {}},
     }
     return mapping.get(intent)
 
@@ -266,6 +282,7 @@ def desktop_intent_reply(intent: str, success: bool) -> str:
         "focus_chrome": "Chrome is in front.",
         "open_gmail": "Gmail is open.",
         "open_vscode": "VS Code is open.",
+        "open_file_explorer": "File Explorer is open.",
     }
 
     if success:
