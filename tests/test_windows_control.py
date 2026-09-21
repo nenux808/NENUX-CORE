@@ -4,6 +4,7 @@ from unittest.mock import patch, MagicMock
 from tools.windows_control import (
     _resolve_profile_selector,
     open_chrome_url,
+    open_youtube_search,
 )
 
 
@@ -89,6 +90,26 @@ class TestWindowsChromeControl(unittest.TestCase):
         self.assertTrue(result["opened"])
         self.assertEqual(result["profile_directory"], "Profile 2")
         mock_popen.assert_called_once()
+
+    @patch("tools.windows_control.open_chrome_url")
+    def test_youtube_search_builds_results_url(self, mock_open):
+        mock_open.return_value = {
+            "success": True,
+            "opened": True,
+            "profile_directory": "Default",
+            "url": "https://www.youtube.com/results?search_query=weekends+playlist",
+        }
+
+        result = open_youtube_search("weekends playlist")
+
+        self.assertTrue(result["success"])
+        self.assertTrue(result["opened"])
+        self.assertEqual(result["query"], "weekends playlist")
+        self.assertEqual(result["target"], "youtube_search")
+        mock_open.assert_called_once_with(
+            "https://www.youtube.com/results?search_query=weekends+playlist",
+            profile_directory=None,
+        )
 
 
 if __name__ == "__main__":
