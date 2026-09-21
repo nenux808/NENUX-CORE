@@ -25,11 +25,25 @@ STOP_COMMANDS = {
     "quit",
 }
 
+GLOBAL_STOP_COMMANDS = {
+    "stop listening",
+    "goodbye",
+    "go offline",
+    "exit",
+    "quit",
+}
+
 
 def is_stop_command(command: str) -> bool:
     """Return True when Clara was explicitly asked to end the voice session."""
     normalized = command.strip().lower().rstrip(" .!?")
     return normalized in STOP_COMMANDS
+
+
+def is_global_stop_command(command: str) -> bool:
+    """Allow explicit shutdown commands even when the follow-up session expired."""
+    normalized = command.strip().lower().rstrip(" .!?")
+    return normalized in GLOBAL_STOP_COMMANDS
 
 
 def resolve_voice_command(
@@ -92,6 +106,12 @@ def main():
 
                 if not transcript:
                     continue
+
+                if is_global_stop_command(transcript):
+                    reply = "Okay, I'll stop listening."
+                    print(f"CLARA > {reply}")
+                    tts.speak(reply)
+                    break
 
                 if (
                     session_active
