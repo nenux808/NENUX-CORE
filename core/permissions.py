@@ -13,6 +13,7 @@ SAFE_TOOLS = {
     "media_control",
     "open_chrome",
     "focus_chrome",
+    "inspect_drive",
     "chrome_tab_control",
     "open_gmail",
     "open_vscode",
