@@ -330,3 +330,65 @@ def open_file_explorer() -> dict:
         "opened": True,
         "application": "File Explorer",
     }
+
+
+
+def inspect_drive(drive: str, max_items: int = 50) -> dict:
+    """Inspect one Windows drive root without recursive traversal or mutation."""
+    raw = str(drive).strip().upper().replace("\\", "").replace("/", "")
+    if raw.endswith(":"):
+        raw = raw[:-1]
+
+    if len(raw) != 1 or not raw.isalpha():
+        return {
+            "success": False,
+            "error": "Drive must be a single Windows drive letter such as C or D.",
+        }
+
+    root = Path(f"{raw}:/")
+    if not root.exists():
+        return {
+            "success": False,
+            "error": f"Drive does not exist or is unavailable: {raw}:",
+        }
+
+    try:
+        usage = shutil.disk_usage(root)
+    except OSError as exc:
+        return {
+            "success": False,
+            "error": f"Could not read drive usage for {raw}: {exc}",
+        }
+
+    items = []
+    try:
+        for entry in sorted(root.iterdir(), key=lambda p: p.name.lower()):
+            if len(items) >= max(1, min(int(max_items), 100)):
+                break
+
+            try:
+                kind = "directory" if entry.is_dir() else "file"
+            except OSError:
+                kind = "unknown"
+
+            items.append({
+                "name": entry.name,
+                "type": kind,
+            })
+    except (OSError, PermissionError) as exc:
+        return {
+            "success": False,
+            "error": f"Could not list drive root {raw}: {exc}",
+        }
+
+    return {
+        "success": True,
+        "drive": f"{raw}:",
+        "root": str(root),
+        "total_bytes": usage.total,
+        "used_bytes": usage.used,
+        "free_bytes": usage.free,
+        "items": items,
+        "truncated": len(items) >= max(1, min(int(max_items), 100)),
+        "scope": "drive_root_only",
+    }
