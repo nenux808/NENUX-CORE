@@ -40,6 +40,7 @@ NENUX currently has ONLY these tools:
 - open_gmail: open Gmail in the selected/default Chrome profile
 - open_vscode: launch Visual Studio Code
 - open_file_explorer: launch Windows File Explorer
+- inspect_drive: inspect one Windows drive root and report space/top-level entries
 - open_youtube_search: open YouTube search results for a query in Chrome
 - youtube_media_control: target pause/resume at a visible YouTube Chrome window
 
@@ -74,7 +75,7 @@ RULES:
 21. For generic pause/resume/mute/volume/track controls, use media_control. When the user explicitly targets YouTube for pause/resume, use youtube_media_control.
 22. For next/previous/close tab commands, use chrome_tab_control.
 23. For "open Chrome", use open_chrome. For "focus Chrome", use focus_chrome.
-24. For "open Gmail", use open_gmail. For "open VS Code", use open_vscode. For "open File Explorer", use open_file_explorer.
+24. For "open Gmail", use open_gmail. For "open VS Code", use open_vscode. For "open File Explorer", use open_file_explorer. For "check/inspect the C drive" or another explicit drive letter, use inspect_drive.
 24. Never use run_python or filesystem tools for simple desktop controls when a dedicated PC tool exists.
 25. The filesystem tool is already rooted inside the NENUX workspace. Use "." for the workspace root; never plan list_files with path "workspace".
 26. For local code debugging, inspect the named/provided local code and reproduce the error before using web_search. Do not add generic debugging-tip web searches unless the user explicitly asks for external research or local evidence shows a dependency/API issue that needs verification.
@@ -173,6 +174,14 @@ def _desktop_control_plan(goal: str) -> list[str] | None:
 
     if "open file explorer" in text or re.search(r"\bopen\s+explorer\b", text):
         return ["Open Windows File Explorer using open_file_explorer"]
+
+    drive_match = re.search(
+        r"\b(?:check|inspect|look at|show|view)\s+(?:the\s+)?([a-z])(?::)?\s+drive\b",
+        text,
+    )
+    if drive_match:
+        drive = drive_match.group(1).upper()
+        return [f"Inspect the {drive}: drive root using inspect_drive"]
 
     return None
 
