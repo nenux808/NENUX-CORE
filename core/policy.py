@@ -215,7 +215,10 @@ def is_chrome_profile_followup(text: str, history: list[dict]) -> bool:
         "chrome profile" in recent_assistant
         or "which profile" in recent_assistant
         or "profile should i use" in recent_assistant
-    ) and recent_browser_media_request(history) is not None
+    ) and (
+        recent_browser_media_request(history) is not None
+        or recent_youtube_search_request(history) is not None
+    )
 
 
 
@@ -312,3 +315,17 @@ def extract_youtube_search_query(text: str) -> str:
 
     query = match.group(1).strip(" ,.-")
     return query
+
+
+
+def recent_youtube_search_request(history: list[dict]) -> str | None:
+    """Return the most recent direct YouTube-search request from session history."""
+    for item in reversed(history or []):
+        if item.get("role") != "user":
+            continue
+
+        content = str(item.get("content", "")).strip()
+        if is_youtube_search_request(content):
+            return content
+
+    return None
