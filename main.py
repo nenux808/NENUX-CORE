@@ -512,6 +512,7 @@ def parse_tool_request(response: str):
         "media_control",
         "open_chrome",
         "focus_chrome",
+        "inspect_drive",
         "chrome_tab_control",
         "open_gmail",
         "open_vscode",
@@ -590,6 +591,7 @@ def run_agent(
     source_fetch_required: bool = False,
     browser_media_required: bool = False,
     desktop_intent: str | None = None,
+    desktop_intent_details: dict | None = None,
     youtube_search_query: str | None = None,
     youtube_search_profile: str | None = None,
     model_name: str | None = None,
@@ -722,7 +724,10 @@ Use tools again when current evidence is required.
         )
 
     if desktop_intent:
-        direct_call = desktop_intent_tool_call(desktop_intent)
+        direct_call = desktop_intent_tool_call(
+            desktop_intent,
+            desktop_intent_details,
+        )
         if direct_call:
             tool_name = direct_call["tool"]
             arguments = direct_call.get("arguments", {})
@@ -764,6 +769,26 @@ Use tools again when current evidence is required.
                 profile_text = "; ".join(labels) if labels else "the available Chrome profiles"
                 return (
                     "Which Chrome profile should I use? " + profile_text,
+                    tool_trace,
+                )
+
+            if (
+                desktop_intent == "inspect_drive"
+                and isinstance(result, dict)
+                and result.get("success")
+            ):
+                drive = result.get("drive", "drive")
+                total_gb = float(result.get("total_bytes", 0)) / (1024 ** 3)
+                free_gb = float(result.get("free_bytes", 0)) / (1024 ** 3)
+                names = [
+                    str(item.get("name", ""))
+                    for item in result.get("items", [])[:10]
+                    if isinstance(item, dict) and item.get("name")
+                ]
+                preview = ", ".join(names) if names else "no visible top-level entries"
+                return (
+                    f"{drive} has about {free_gb:.1f} GB free out of "
+                    f"{total_gb:.1f} GB. Top-level entries include: {preview}.",
                     tool_trace,
                 )
 
@@ -1453,6 +1478,7 @@ def process_user_request(
 
     execution_input = user_input
     resolved_desktop_intent = None
+    resolved_desktop_details = None
     youtube_search_query = (
         extract_youtube_search_query(user_input)
         if is_youtube_search_request(user_input)
@@ -1467,9 +1493,14 @@ def process_user_request(
             and float(desktop.get("confidence", 0.0)) >= 0.72
         ):
             resolved_desktop_intent = desktop["intent"]
+            resolved_desktop_details = dict(desktop)
             canonical = desktop_intent_command(resolved_desktop_intent)
             if canonical:
-                execution_input = canonical
+                if resolved_desktop_intent == "inspect_drive":
+                    drive = str(desktop.get("drive", "")).strip().upper()
+                    execution_input = f"inspect the {drive} drive"
+                else:
+                    execution_input = canonical
 
     if is_browser_media_correction_followup(user_input, history):
         prior_media = recent_browser_media_request(history)
@@ -1586,6 +1617,7 @@ def process_user_request(
             ),
             browser_media_required=browser_media_context,
             desktop_intent=resolved_desktop_intent,
+            desktop_intent_details=resolved_desktop_details,
             youtube_search_query=youtube_search_query or None,
             youtube_search_profile=youtube_search_profile,
             model_name=model_decision.model,
@@ -1621,6 +1653,7 @@ def process_user_request(
             "media_control",
             "open_chrome",
             "focus_chrome",
+            "inspect_drive",
             "chrome_tab_control",
             "open_chrome_url",
             "open_youtube_search",
