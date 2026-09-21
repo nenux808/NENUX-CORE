@@ -53,6 +53,8 @@ from core.policy import (
     is_effective_lyrics_request,
     is_lyrics_context_followup,
     is_media_content_request,
+    is_youtube_search_request,
+    extract_youtube_search_query,
     memory_only_mode,
     needs_code_target_clarification,
     recent_browser_media_request,
@@ -246,6 +248,16 @@ Arguments:
 
 Allowed actions:
 pause, resume, play_pause
+
+20. open_youtube_search
+
+Arguments:
+
+{
+    "query": "The Weeknd playlist"
+}
+
+Use this for commands that explicitly ask to search or find something on YouTube.
 
 Use web_search to discover public sources. Use web_fetch when a factual answer
 depends on details that should be verified from the actual page instead of a
@@ -486,6 +498,7 @@ def parse_tool_request(response: str):
         "list_chrome_profiles",
         "set_default_chrome_profile",
         "open_chrome_url",
+        "open_youtube_search",
         "media_control",
         "open_chrome",
         "focus_chrome",
@@ -567,6 +580,7 @@ def run_agent(
     source_fetch_required: bool = False,
     browser_media_required: bool = False,
     desktop_intent: str | None = None,
+    youtube_search_query: str | None = None,
     model_name: str | None = None,
 ):
     if model_name is None:
@@ -640,6 +654,59 @@ Use tools again when current evidence is required.
     max_steps = MAX_AGENT_STEPS
 
     tool_trace = []
+
+    if youtube_search_query:
+        tool_name = "open_youtube_search"
+        arguments = {"query": youtube_search_query}
+
+        print(
+            f"\n[TOOL] {tool_name} "
+            f"{json.dumps(arguments, ensure_ascii=False)}"
+        )
+
+        result = execute_tool(tool_name, arguments)
+        tool_trace.append(
+            {
+                "sequence": 1,
+                "tool": tool_name,
+                "arguments": arguments,
+                "result": result,
+            }
+        )
+
+        print(
+            "[RESULT]",
+            json.dumps(result, indent=2, ensure_ascii=False),
+        )
+
+        if isinstance(result, dict) and result.get("needs_profile_selection"):
+            profiles = result.get("profiles", [])
+            labels = []
+            for index, profile in enumerate(profiles, start=1):
+                name = str(profile.get("name", "")).strip() or str(
+                    profile.get("directory", "")
+                ).strip()
+                email = str(profile.get("email", "")).strip()
+                labels.append(
+                    f"{index}. {name}" + (f" ({email})" if email else "")
+                )
+
+            profile_text = "; ".join(labels) if labels else "the available Chrome profiles"
+            return (
+                "Which Chrome profile should I use? " + profile_text,
+                tool_trace,
+            )
+
+        if isinstance(result, dict) and result.get("success") and result.get("opened"):
+            return (
+                f'Opened YouTube search results for "{youtube_search_query}".',
+                tool_trace,
+            )
+
+        return (
+            "I couldn't open the YouTube search results.",
+            tool_trace,
+        )
 
     if desktop_intent:
         direct_call = desktop_intent_tool_call(desktop_intent)
@@ -1363,6 +1430,11 @@ def process_user_request(
 
     execution_input = user_input
     resolved_desktop_intent = None
+    youtube_search_query = (
+        extract_youtube_search_query(user_input)
+        if is_youtube_search_request(user_input)
+        else ""
+    )
 
     if should_try_desktop_intent(user_input):
         desktop = interpret_desktop_intent(user_input)
@@ -1392,7 +1464,7 @@ def process_user_request(
 
     route = (
         "agent_task"
-        if resolved_desktop_intent
+        if (resolved_desktop_intent or youtube_search_query)
         else route_request(execution_input)
     )
     lyrics_context = is_effective_lyrics_request(user_input, history)
@@ -1482,6 +1554,7 @@ def process_user_request(
             ),
             browser_media_required=browser_media_context,
             desktop_intent=resolved_desktop_intent,
+            youtube_search_query=youtube_search_query or None,
             model_name=model_decision.model,
         )
 
@@ -1517,6 +1590,7 @@ def process_user_request(
             "focus_chrome",
             "chrome_tab_control",
             "open_chrome_url",
+            "open_youtube_search",
             "open_gmail",
             "open_vscode",
             "youtube_media_control",
