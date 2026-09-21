@@ -70,6 +70,20 @@ class TestDesktopIntent(unittest.TestCase):
         self.assertEqual(result["intent"], "none")
         self.assertEqual(result["confidence"], 1.0)
 
+    def test_check_c_drive_uses_inspect_drive(self):
+        result = interpret_desktop_intent("check the C drive")
+
+        self.assertEqual(result["intent"], "inspect_drive")
+        self.assertEqual(result["drive"], "C")
+        tool_call = desktop_intent_tool_call(
+            result["intent"],
+            result,
+        )
+        self.assertEqual(
+            tool_call,
+            {"tool": "inspect_drive", "arguments": {"drive": "C"}},
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
