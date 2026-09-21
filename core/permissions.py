@@ -9,6 +9,7 @@ SAFE_TOOLS = {
     "list_chrome_profiles",
     "set_default_chrome_profile",
     "open_chrome_url",
+    "open_youtube_search",
     "media_control",
     "open_chrome",
     "focus_chrome",
