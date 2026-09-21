@@ -329,3 +329,18 @@ def recent_youtube_search_request(history: list[dict]) -> str | None:
             return content
 
     return None
+
+
+
+def is_email_action_request(text: str) -> bool:
+    """Detect email-send/compose actions that NENUX cannot execute yet."""
+    normalized = re.sub(r"\s+", " ", str(text).lower()).strip()
+    patterns = (
+        r"\bsend\b.+\bemail\b",
+        r"\bemail\b.+\bsend\b",
+        r"\bcompose\b.+\bemail\b",
+        r"\bwrite\b.+\bemail\b",
+        r"\breply\b.+\bemail\b",
+        r"\bforward\b.+\bemail\b",
+    )
+    return any(re.search(pattern, normalized) for pattern in patterns)
