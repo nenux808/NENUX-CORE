@@ -285,3 +285,30 @@ def needs_code_target_clarification(
     )
 
     return not has_current_target
+
+
+
+def is_youtube_search_request(text: str) -> bool:
+    """Detect commands asking Clara to search directly inside YouTube."""
+    normalized = re.sub(r"\s+", " ", str(text).lower()).strip()
+    return bool(
+        re.search(
+            r"\b(search|find|look up)\b.+\b(on|in)\s+youtube\b",
+            normalized,
+        )
+    )
+
+
+def extract_youtube_search_query(text: str) -> str:
+    """Extract the user's intended YouTube search terms from a direct command."""
+    normalized = re.sub(r"\s+", " ", str(text)).strip()
+    match = re.search(
+        r"\b(?:search|find|look up)\b\s+(?:for\s+)?(.+?)\s+\b(?:on|in)\s+youtube\b",
+        normalized,
+        flags=re.IGNORECASE,
+    )
+    if not match:
+        return ""
+
+    query = match.group(1).strip(" ,.-")
+    return query
