@@ -292,6 +292,8 @@ def _enforce_tool_action_matching(
             required_tool = "youtube_media_control"
         elif "media_control" in description:
             required_tool = "media_control"
+        elif "open_youtube_search" in description or "open youtube search results" in description:
+            required_tool = "open_youtube_search"
         elif "open_chrome_url" in description or "open the verified youtube video" in description:
             required_tool = "open_chrome_url"
         elif "open_chrome" in description or "open google chrome" in description:
@@ -338,6 +340,27 @@ def _enforce_tool_action_matching(
                     "step_id": step_id,
                     "status": "pending",
                     "reason": "Gmail has not actually opened yet.",
+                }
+                continue
+
+        if required_tool == "open_youtube_search" and required_tool in used_tools:
+            search_results = [
+                entry.get("result", {})
+                for entry in tool_trace
+                if isinstance(entry, dict) and entry.get("tool") == "open_youtube_search"
+            ]
+            if not any(
+                result.get("success") and result.get("opened")
+                for result in search_results
+                if isinstance(result, dict)
+            ):
+                evaluation_map[step_id] = {
+                    "step_id": step_id,
+                    "status": "pending",
+                    "reason": (
+                        "YouTube search results have not actually opened yet; "
+                        "profile selection or another launch step is still required."
+                    ),
                 }
                 continue
 
