@@ -40,6 +40,7 @@ NENUX currently has ONLY these tools:
 - open_gmail: open Gmail in the selected/default Chrome profile
 - open_vscode: launch Visual Studio Code
 - open_youtube_search: open YouTube search results for a query in Chrome
+- youtube_media_control: target pause/resume at a visible YouTube Chrome window
 
 RULES:
 
@@ -69,14 +70,14 @@ RULES:
 18a. For commands like "search <query> on YouTube" or "find <query> in YouTube", use open_youtube_search directly. Do not use web_search and do not merely list links.
 19. If open_chrome_url reports that multiple profiles exist and no default is saved, stop and ask the user which listed Chrome profile to use.
 20. If the user explicitly says to remember a chosen Chrome profile as default, use set_default_chrome_profile.
-21. For pause/resume/mute/volume/track controls, use media_control.
+21. For generic pause/resume/mute/volume/track controls, use media_control. When the user explicitly targets YouTube for pause/resume, use youtube_media_control.
 22. For next/previous/close tab commands, use chrome_tab_control.
 23. For "open Chrome", use open_chrome. For "focus Chrome", use focus_chrome.
 24. For "open Gmail", use open_gmail. For "open VS Code", use open_vscode.
 24. Never use run_python or filesystem tools for simple desktop controls when a dedicated PC tool exists.
 25. The filesystem tool is already rooted inside the NENUX workspace. Use "." for the workspace root; never plan list_files with path "workspace".
 26. For local code debugging, inspect the named/provided local code and reproduce the error before using web_search. Do not add generic debugging-tip web searches unless the user explicitly asks for external research or local evidence shows a dependency/API issue that needs verification.
-27. Never guess which local code file "this code" refers to when no current or immediately preceding user message identifies the target.
+27. Never guess which local code file "this code" refers to. The current request must explicitly identify the target.
 
 Return ONLY valid JSON:
 
@@ -91,6 +92,16 @@ Return ONLY valid JSON:
 
 def _desktop_control_plan(goal: str) -> list[str] | None:
     text = goal.lower().strip()
+
+    if "youtube" in text:
+        if "pause" in text:
+            return [
+                "Pause YouTube in the visible Chrome window using youtube_media_control"
+            ]
+        if any(term in text for term in ("resume", "unpause", "continue")):
+            return [
+                "Resume YouTube in the visible Chrome window using youtube_media_control"
+            ]
 
     if any(phrase in text for phrase in ("pause", "pause it", "pause the video")):
         return ["Pause or resume current media using media_control"]
