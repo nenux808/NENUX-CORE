@@ -306,6 +306,8 @@ def _enforce_tool_action_matching(
             required_tool = "open_gmail"
         elif "open_vscode" in description or "open visual studio code" in description:
             required_tool = "open_vscode"
+        elif "open_file_explorer" in description or "open windows file explorer" in description:
+            required_tool = "open_file_explorer"
         elif "set_default_chrome_profile" in description or "set the selected chrome profile as default" in description:
             required_tool = "set_default_chrome_profile"
         elif "list_chrome_profiles" in description or "list available local chrome profiles" in description:
