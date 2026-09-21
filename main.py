@@ -53,6 +53,7 @@ from core.policy import (
     is_effective_lyrics_request,
     is_lyrics_context_followup,
     is_media_content_request,
+    is_email_action_request,
     is_youtube_search_request,
     extract_youtube_search_query,
     memory_only_mode,
@@ -1380,6 +1381,7 @@ def run_conversation(
                   "If earlier conversation history identifies the assistant as NENUX Core, "
                   "treat that as legacy context and keep your current interface identity as Clara. "
                   "Answer directly without tool calls, JSON, task plans, or system-status language. "
+                  "Never claim you can perform an external action unless NENUX Core currently has a tool for it. "
                   "Never invent lyrics, quotations, dates, titles, names, or factual details. "
                   "If you are uncertain about an exact lyric or quote, say so rather than guessing. "
                   "Do not provide full song lyrics or long non-user-provided lyric passages, "
@@ -1417,6 +1419,15 @@ def process_user_request(
 ):
     """Run one new user request through the same tracked NENUX Core pipeline."""
     original_goal = user_input
+
+    if is_email_action_request(user_input):
+        reply = (
+            "I can open Gmail, but sending or composing email is not implemented "
+            "in NENUX Core yet."
+        )
+        save_message("user", user_input)
+        save_message("assistant", reply)
+        return reply, "completed", get_recent_messages()
 
     if needs_code_target_clarification(user_input, history):
         reply = (
